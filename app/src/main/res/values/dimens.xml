@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <dimen name="appbar_height">280dp</dimen>
+    <dimen name="appbar_height_landscape">200dp</dimen>
+    <dimen name="expand_title_margin">16dp</dimen>
+    <dimen name="expand_title_margin_start">160dp</dimen>
+    <dimen name="expand_title_margin_start_landscape">240dp</dimen>
+    <dimen name="margin_horizontal_8dp">8dp</dimen>
+    <dimen name="margin_horizontal_16dp">16dp</dimen>
+    <dimen name="margin_vertical_8dp">8dp</dimen>
+    <dimen name="margin_vertical_16dp">16dp</dimen>
+    <dimen name="text_default24sp">24sp</dimen>
+    <dimen name="text_default28sp">28sp</dimen>
+    <dimen name="text_standard_18sp">18sp</dimen>
+    <dimen name="half_margin_vertical_4dp">4dp</dimen>
+    <dimen name="large_margin_horizontal_32dp">32dp</dimen>
+    <dimen name="large_top_margin_48dp">48dp</dimen>
+    <dimen name="logo_height">150dp</dimen>
+    <dimen name="logo_width">200dp</dimen>
+    <dimen name="medium_padding_24dp">24dp</dimen>
+    <dimen name="card_elevation_6dp">6dp</dimen>
+    <dimen name="movie_card_height">400dp</dimen>
+    <dimen name="card_height_movie_item">360dp</dimen>
+    <dimen name="super_small_margin">2dp</dimen>
+    <dimen name="margin_top_logo">22dp</dimen>
+    <dimen name="text_20sp">20sp</dimen>
+    <dimen name="standard_xhdpi_text16sp">16sp</dimen>
+    <dimen name="marginTop_poster_65dp">65dp</dimen>
+    <dimen name="margin_start_12dp">12dp</dimen>
+    <dimen name="static_progress_xhdpi_size_115">115dp</dimen>
+    <dimen name="margin_bottom_22dp">22dp</dimen>
+    <dimen name="small_xhdpi_text_14sp">14sp</dimen>
+    <dimen name="recycler_height_xhdpi_130">130dp</dimen>
+    <dimen name="recycler_width_xhdpi_700">700dp</dimen>
+</resources>

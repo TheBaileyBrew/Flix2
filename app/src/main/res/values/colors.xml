@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="colorPrimary">#285929</color>
+    <color name="colorPrimaryText">#fdfdfd</color>
+    <color name="colorPrimaryFade">#202020</color>
+    <color name="colorPrimaryDark">#424242</color>
+    <color name="colorWhiteFade">#50ffffff</color>
+    <color name="colorAccent">#757575</color>
+    <color name="colorWhite">#fefefe</color>
+    <color name="colorWhiteWash">#80757575</color>
+
+    <color name="colorToolbarExpanded">#fcfcfc</color>
+    <color name="colorToolbarCollapsed">#000000</color>
+
+    <!-- Color Scheme for Rating Progress-->
+    <!-- HIGH -->
+    <color name="colorGoodFade">#9025cc00</color>
+    <!-- MED -->
+    <color name="colorMidFade">#90f5c400</color>
+    <!-- LOW -->
+    <color name="colorLowFade">#90dc0202</color>
+</resources>

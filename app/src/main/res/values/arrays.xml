@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string-array name="preference_sort_options">
+        <item>@string/preference_sort_popular_label</item>
+        <item>@string/preference_sort_top_rated_label</item>
+        <item>@string/preference_sort_release_date_label</item>
+    </string-array>
+
+    <string-array name="preference_sort_values">
+        <item>@string/preference_sort_popular</item>
+        <item>@string/preference_sort_top_rated</item>
+        <item>@string/preference_sort_most_recent</item>
+    </string-array>
+
+    <string-array name="preference_sort_language_options">
+        <item>@string/preference_sort_language_label_eng</item>
+        <item>@string/preference_sort_language_label_chinese</item>
+        <item>@string/preference_sort_language_label_indian</item>
+        <item>@string/preference_sort_language_label_japanese</item>
+        <item>@string/preference_sort_language_label_korean</item>
+        <item>@string/preference_sort_language_label_all</item>
+    </string-array>
+
+    <string-array name="preference_sort_language_values">
+        <item>@string/preference_sort_language_eng</item>
+        <item>@string/preference_sort_language_ch</item>
+        <item>@string/preference_sort_language_in</item>
+        <item>@string/preference_sort_language_jap</item>
+        <item>@string/preference_sort_language_ko</item>
+        <item>@string/preference_sort_language_all</item>
+    </string-array>
+
+</resources>

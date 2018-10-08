@@ -1,0 +1,75 @@
+<resources>
+    <string name="app_name">Flix</string>
+    <string name="password_too_short">Password must contain at least 8 characters.</string>
+    <string name="username_too_short">Username must be valid</string>
+
+    <string name="internet_message_one">A-vada-ca-internet. Go conjure up some internet!</string>
+    <string name="internet_message_two">Oh, you want to see movies with no internet. Tell me more.</string>
+    <string name="internet_message_three">One does not simply get movies without internet.</string>
+    <string name="internet_message_four">If you have internet I will find you. and I will use it.</string>
+    <string name="internet_message_default">Thanos has found your internet connectivity lacking.</string>
+
+
+    <!--  Label for Preference Sort BY TYPE -->
+    <string name="preference_sort_label">Sort Movies By</string>
+    <!--  Labels for Preference Sorting  -->
+    <string name="preference_sort_popular_label">Popular</string>
+    <string name="preference_sort_top_rated_label">Top Rated</string>
+    <string name="preference_sort_release_date_label">Upcoming</string>
+    <!--  Value for Preference Sorting  -->
+    <string name="preference_sort_popular" translatable="false">popularity.desc</string>
+    <string name="preference_sort_top_rated" translatable="false">vote_average.desc</string>
+    <string name="preference_sort_most_recent" translatable="false">release_date.desc</string>
+    <!--  Key name for Preference Sorting  -->
+    <string name="preference_sort_key" translatable="false">sort_by</string>
+
+    <!--  Label for Preference Sort By LANGUAGE -->
+    <string name="preference_sort_language_label">Filter Language</string>
+    <!--  Label for Preference Language  -->
+    <string name="preference_sort_language_label_eng">English</string>
+    <string name="preference_sort_language_label_all">All</string>
+    <string name="preference_sort_language_label_chinese">Chinese</string>
+    <string name="preference_sort_language_label_indian">Indian</string>
+    <string name="preference_sort_language_label_korean">Korean</string>
+    <string name="preference_sort_language_label_japanese">Japanese</string>
+    <!--  Value for Preference Language  -->
+    <string name="preference_sort_language_eng">en</string>
+    <string name="preference_sort_language_ch">zh</string>
+    <string name="preference_sort_language_in">te</string>
+    <string name="preference_sort_language_ko">ko</string>
+    <string name="preference_sort_language_jap">ja</string>
+    <string name="preference_sort_language_all">all</string>
+    <!--  Key name for Preference Sorting  -->
+    <string name="preference_sort_language_key" translatable="false">original_language</string>
+    <string name="lorem_ipsum">Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.</string>
+    <string name="refresh_network">Please check your network settings and try again</string>
+
+
+
+
+    <string name="release_date">RELEASE DATE</string>
+    <string name="runtime">RUNTIME</string>
+    <string name="average_rating">AVERAGE RATING</string>
+    <string name="login">LOGIN</string>
+    <string name="skip_login">SKIP LOGIN</string>
+    <string name="password_hint">Password</string>
+    <string name="username_or_email_hint">Username or Email</string>
+    <string name="preferences">Preferences</string>
+    <string name="sorting_and_filters">Sorting and Filters</string>
+    <string name="movie_settings">Movie Settings</string>
+    <string name="popular_movie_label_activity">Flix Movies</string>
+    <string name="movie_details_label_activity">Movie Details</string>
+    <string name="movie_poster">movie poster</string>
+    <string name="logo_image">logo image</string>
+    <string name="no_internet_meme_image">no internet meme image</string>
+    <string name="toolbar_backdrop_image">toolbar backdrop image</string>
+    <string name="unknown_time">Unknown Time</string>
+    <string name="linebreak">/</string>
+    <string name="check_network_credits_display">There was a problem getting actor credits. Please check your network settings</string>
+    <string name="actor_credit_image">actor credit image</string>
+    <string name="static_text_as_credit">as</string>
+    <string name="preference_year_default">0000</string>
+    <string name="preference_year_key">primary_release_year</string>
+    <string name="search">Search</string>
+    <string name="search_movies">Search movies..</string>
+</resources>
