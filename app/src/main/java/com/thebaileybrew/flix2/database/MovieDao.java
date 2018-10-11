@@ -13,8 +13,11 @@ import androidx.room.Update;
 
 @Dao
 public interface MovieDao {
-    @Query("SELECT * FROM themovies ORDER BY movie_id")
-    List<Movie> loadAllMovies();
+    @Query("SELECT * FROM allmovies WHERE favorite = :favValue ORDER BY movie_id")
+    List<Movie> loadAllMovies(int favValue);
+
+    @Query("SELECT * FROM allmovies WHERE movie_id = :movieID")
+    Movie loadSingleMovies(int movieID);
 
     @Insert(onConflict = OnConflictStrategy.IGNORE)
     void insertMovie(Movie movie);

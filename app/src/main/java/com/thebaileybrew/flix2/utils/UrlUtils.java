@@ -110,12 +110,6 @@ public class UrlUtils {
         } else {
             String baseMovie = baseMovieQueryUrl(apiKey);
             switch (sortingOrder) {
-                case "popularity.desc":
-                    movieQueryUri = Uri.parse(baseMovie).buildUpon()
-                            .appendQueryParameter(SORT_BY, sortingOrder)
-                            .build();
-                    baseMovie = movieQueryUri.toString();
-                    break;
                 case "vote_average.desc":
                     movieQueryUri = Uri.parse(baseMovie).buildUpon()
                             .appendQueryParameter(SORT_BY, sortingOrder)
@@ -131,7 +125,23 @@ public class UrlUtils {
                             .build();
                     baseMovie = movieQueryUri.toString();
                     break;
-                default:
+                case "popularity.desc":
+                    movieQueryUri = Uri.parse(baseMovie).buildUpon()
+                            .appendQueryParameter(SORT_BY, sortingOrder)
+                            .build();
+                    baseMovie = movieQueryUri.toString();
+                    break;
+                case "favorite":
+                    movieQueryUri = Uri.parse(baseMovie).buildUpon()
+                            .appendQueryParameter(SORT_BY, "popularity.desc")
+                            .build();
+                    baseMovie = movieQueryUri.toString();
+                    break;
+                case "watchlist":
+                    movieQueryUri = Uri.parse(baseMovie).buildUpon()
+                            .appendQueryParameter(SORT_BY, "popularity.desc")
+                            .build();
+                    baseMovie = movieQueryUri.toString();
                     break;
             }
 

@@ -26,4 +26,12 @@
         <item name="android:textSize">24sp</item>
     </style>
 
+    <style name="PagerTabs">
+        <item name="tabTextColor">@color/colorPrimaryText</item>
+        <item name="tabSelectedTextColor">@color/colorPrimaryTextSelected</item>
+        <item name="tabIndicatorColor">@color/colorPrimary</item>
+        <item name="tabIndicatorHeight">6dp</item>
+    </style>
+
+
 </resources>

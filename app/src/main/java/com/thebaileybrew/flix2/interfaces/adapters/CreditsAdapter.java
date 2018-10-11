@@ -71,7 +71,7 @@ public class CreditsAdapter extends RecyclerView.Adapter<CreditsAdapter.ViewHold
         }
     }
 
-    public void setCreditCollection(ArrayList<Credit> creditReturn) {
+    public void setCreditCollection(List<Credit> creditReturn) {
         creditList = creditReturn;
         notifyDataSetChanged();
     }

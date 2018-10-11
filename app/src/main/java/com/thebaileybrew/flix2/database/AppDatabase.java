@@ -13,11 +13,9 @@ import androidx.room.Room;
 import androidx.room.RoomDatabase;
 import androidx.room.TypeConverters;
 
-@Database(entities = {Credit.class, Film.class, Movie.class}, version = 1, exportSchema = false)
+@Database(entities = Movie.class, version = 1, exportSchema = false)
 @TypeConverters(ListConverter.class)
 public abstract class AppDatabase extends RoomDatabase{
 
-    public abstract CreditDao creditDao();
     public abstract MovieDao movieDao();
-    public abstract FilmDao filmDao();
 }

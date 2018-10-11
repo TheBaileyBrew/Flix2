@@ -12,7 +12,7 @@ public class DatabaseClient {
     private static DatabaseClient mInstance;
 
     private AppDatabase appDatabase;
-    private static final String DATABASE_NAME = "forthemovies";
+    private static final String DATABASE_NAME = "moviedatabase";
 
     private DatabaseClient(Context mContext) {
         this.mContext = mContext;

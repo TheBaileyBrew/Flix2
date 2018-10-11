@@ -2,7 +2,7 @@
 <PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
     android:title="@string/movie_settings">
 
-    <com.thebaileybrew.flix.ui.CustomPreferenceCategory
+    <com.thebaileybrew.flix2.interfaces.CustomPreferenceCategory
         android:title="@string/sorting_and_filters">
         <ListPreference
             android:defaultValue="@string/preference_sort_popular"
@@ -16,21 +16,20 @@
             android:entryValues="@array/preference_sort_language_values"
             android:key="@string/preference_sort_language_key"
             android:title="@string/preference_sort_language_label" />
-
-    </com.thebaileybrew.flix.ui.CustomPreferenceCategory>
-    <com.thebaileybrew.flix.ui.CustomPreferenceCategory
+    </com.thebaileybrew.flix2.interfaces.CustomPreferenceCategory>
+    <com.thebaileybrew.flix2.interfaces.CustomPreferenceCategory
         android:title="Release Date Filter">
         <EditTextPreference
             android:defaultValue="@string/preference_year_default"
             android:key="@string/preference_year_key"
             android:title="Filter By Year"
             android:inputType="number"/>
-    </com.thebaileybrew.flix.ui.CustomPreferenceCategory>
-    <com.thebaileybrew.flix.ui.CustomPreferenceCategory
+    </com.thebaileybrew.flix2.interfaces.CustomPreferenceCategory>
+    <com.thebaileybrew.flix2.interfaces.CustomPreferenceCategory
         android:title="Clear All Settings and Filters">
         <Preference
             android:key="clear_settings"
             android:title="Clear All Settings"/>
-    </com.thebaileybrew.flix.ui.CustomPreferenceCategory>
+    </com.thebaileybrew.flix2.interfaces.CustomPreferenceCategory>
 
 </PreferenceScreen>

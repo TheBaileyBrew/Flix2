@@ -4,6 +4,7 @@ import android.os.AsyncTask;
 import android.util.Log;
 
 import com.thebaileybrew.flix2.BuildConfig;
+import com.thebaileybrew.flix2.interfaces.adapters.CreditsAdapter;
 import com.thebaileybrew.flix2.models.Credit;
 import com.thebaileybrew.flix2.utils.UrlUtils;
 import com.thebaileybrew.flix2.utils.jsonUtils;
@@ -14,6 +15,12 @@ import java.util.List;
 
 public class CreditsLoader extends AsyncTask<String, Void, List<Credit>> {
     private static final String TAG = CreditsLoader.class.getSimpleName();
+
+    private final CreditsAdapter mCreditsAdapter;
+
+    public CreditsLoader(CreditsAdapter creditsAdapter) {
+        mCreditsAdapter = creditsAdapter;
+    }
 
     @Override
     protected List<Credit> doInBackground(String... strings) {
@@ -27,7 +34,7 @@ public class CreditsLoader extends AsyncTask<String, Void, List<Credit>> {
         URL creditRequestUrl = UrlUtils.buildCreditsMovieUrl(BuildConfig.API_KEY, movieID);
         try {
             String jsonCreditResponse = jsonUtils.requestHttpsMovieCredits(creditRequestUrl);
-            return jsonUtils.extractCreditDetails(jsonCreditResponse, movieID);
+            return jsonUtils.extractCreditDetails(jsonCreditResponse);
         } catch (Exception e) {
             Log.e(TAG, "doInBackground: can't request credits", e);
             return null;
@@ -36,6 +43,9 @@ public class CreditsLoader extends AsyncTask<String, Void, List<Credit>> {
 
     @Override
     protected  void onPostExecute(List<Credit> credits) {
+        if (credits != null) {
+            mCreditsAdapter.setCreditCollection(credits);
+        }
         super.onPostExecute(credits);
     }
 

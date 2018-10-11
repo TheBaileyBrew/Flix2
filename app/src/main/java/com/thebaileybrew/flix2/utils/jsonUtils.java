@@ -149,28 +149,6 @@ public class jsonUtils {
                 //Extract the movie release date
                 movieReleaseDate = currentFilm.optString(MOVIE_RELEASE_DATE);
                 //Pass the JSON into the Async for database loading
-                loadMovieDetail(movieID, movieVoteCount, movieVoteAverage, movieTitle, moviePopularity,
-                        movieLanguage, moviePosterPath, movieBackdrop, movieOverview, movieReleaseDate);
-                
-            }
-
-        } catch (JSONException je) {
-            Log.e(TAG, "extractMoviesFromJson: problems extracting film details from json", je);
-        }
-        return movieCollection;
-    }
-
-    //Create the Async to load movie details into the database
-    private static void loadMovieDetail(final int movieID, final int movieVoteCount, final double movieVoteAverage,
-                                        final String movieTitle, final long moviePopularity, final String movieLanguage,
-                                        final String moviePosterPath, final String movieBackdrop,
-                                        final String movieOverview, final String movieReleaseDate) {
-
-
-        class loadDatabase extends AsyncTask<Void, Void, Void> {
-
-            @Override
-            protected Void doInBackground(Void... voids) {
                 Movie movie = new Movie();
                 movie.setMovieID(movieID);
                 movie.setMovieVoteCount(movieVoteCount);
@@ -182,6 +160,26 @@ public class jsonUtils {
                 movie.setMovieBackdrop(movieBackdrop);
                 movie.setMovieOverview(movieOverview);
                 movie.setMovieReleaseDate(movieReleaseDate);
+                movieCollection.add(movie);
+                loadMovieDetail(movie);
+                
+            }
+
+        } catch (JSONException je) {
+            Log.e(TAG, "extractMoviesFromJson: problems extracting film details from json", je);
+        }
+        return movieCollection;
+    }
+
+    //Create the Async to load movie details into the database
+    private static void loadMovieDetail(final Movie movie) {
+
+
+        class loadDatabase extends AsyncTask<Void, Void, Void> {
+
+            @Override
+            protected Void doInBackground(Void... voids) {
+
 
                 //Add the movie to the Database
                 DatabaseClient.getInstance(FlixApplication.getContext()).getAppDatabase()
@@ -255,7 +253,7 @@ public class jsonUtils {
     }
 
     //Extract & Return Single Movie Detail Extra Data
-    public static ArrayList<Film> extractSingleFilmData(String jsonReturn, String movieID) {
+    public static ArrayList<Film> extractSingleFilmData(String jsonReturn) {
         String movieTagline;
         int movieRuntime;
         String movieGenre;
@@ -277,7 +275,11 @@ public class jsonUtils {
                 outputString.append(" ");
             }
             movieGenre = outputString.toString();
-            loadMovieExtraDetails(movieID ,movieTagline, movieRuntime, movieGenre);
+            Film film = new Film();
+            film.setMovieTagLine(movieTagline);
+            film.setMovieGenre(movieGenre);
+            film.setMovieRuntime(movieRuntime);
+            movieExtraDetails.add(film);
 
         } catch (JSONException je) {
             Log.e(TAG, "extractSingleFilmData: Problem extracting details", je);
@@ -285,30 +287,6 @@ public class jsonUtils {
         return movieExtraDetails;
     }
 
-    private static void loadMovieExtraDetails(final String movieID, final String movieTagline, final int movieRuntime,
-                                              final String movieGenre) {
-
-        class loadDatabase extends AsyncTask<Void, Void, Void> {
-            @Override
-            protected Void doInBackground(Void... voids) {
-                Film film = new Film();
-                film.setMovieID(movieID);
-                film.setMovieTagLine(movieTagline);
-                film.setMovieGenre(movieGenre);
-                film.setMovieRuntime(movieRuntime);
-                DatabaseClient.getInstance(FlixApplication.getContext()).getAppDatabase()
-                        .filmDao().insertFilm(film);
-                return null;
-            }
-
-            @Override
-            protected void onPostExecute(Void aVoid) {
-                super.onPostExecute(aVoid);
-            }
-        }
-        loadDatabase ldb = new loadDatabase();
-        ldb.execute();
-    }
 
     //Get Single Movie Credit Details
     public static String requestHttpsMovieCredits (URL url) throws IOException {
@@ -364,7 +342,7 @@ public class jsonUtils {
     }
 
     //Extract Single Movie Credit Details
-    public static ArrayList<Credit> extractCreditDetails(String jsonReturn, String movieID) {
+    public static ArrayList<Credit> extractCreditDetails(String jsonReturn) {
         String characterName;
         String characterActor;
         String characterImage;
@@ -385,7 +363,11 @@ public class jsonUtils {
                     characterName = currentCharacter.getString(CREDIT_CHARACTER);
                     characterActor = currentCharacter.getString(CREDIT_ACTOR);
                     characterImage = currentCharacter.getString(CREDIT_IMAGE);
-                    loadMovieCredits(movieID, characterName, characterActor, characterImage);
+                    Credit credit = new Credit();
+                    credit.setCreditActorName(characterActor);
+                    credit.setCreditCharacterName(characterName);
+                    credit.setCreditPath(characterImage);
+                    movieCredits.add(credit);
                 }
             } else {
                 for (int c = 0; c < creditsList.length(); c++) {
@@ -393,36 +375,17 @@ public class jsonUtils {
                     characterName = currentCharacter.getString(CREDIT_CHARACTER);
                     characterActor = currentCharacter.getString(CREDIT_ACTOR);
                     characterImage = currentCharacter.getString(CREDIT_IMAGE);
-                    loadMovieCredits(movieID, characterName, characterActor, characterImage);
+                    Credit credit = new Credit();
+                    credit.setCreditActorName(characterActor);
+                    credit.setCreditCharacterName(characterName);
+                    credit.setCreditPath(characterImage);
+                    movieCredits.add(credit);
                 }
             }
         } catch (JSONException je) {
             Log.e(TAG, "extractCreditDetails: problem getting credits", je);
         }
         return movieCredits;
-    }
-
-    private static void loadMovieCredits(final String movieID, final String characterName, final String characterActor, final String characterImage) {
-        class loadDatabase extends AsyncTask<Void, Void, Void> {
-            @Override
-            protected Void doInBackground(Void... voids) {
-                Credit credit = new Credit();
-                credit.setFilmID(movieID);
-                credit.setCreditCharacterName(characterName);
-                credit.setCreditActorName(characterActor);
-                credit.setCreditPath(characterImage);
-                DatabaseClient.getInstance(FlixApplication.getContext()).getAppDatabase()
-                        .creditDao().insertCredit(credit);
-                return null;
-            }
-
-            @Override
-            protected void onPostExecute(Void aVoid) {
-                super.onPostExecute(aVoid);
-            }
-        }
-        loadDatabase ldb = new loadDatabase();
-        ldb.execute();
     }
 
 }

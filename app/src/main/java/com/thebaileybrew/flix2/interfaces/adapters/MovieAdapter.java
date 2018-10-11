@@ -5,9 +5,11 @@ import android.graphics.Color;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageButton;
 import android.widget.ImageView;
 
 import com.squareup.picasso.Picasso;
+import com.thebaileybrew.flix2.FlixApplication;
 import com.thebaileybrew.flix2.R;
 import com.thebaileybrew.flix2.models.Movie;
 import com.thebaileybrew.flix2.utils.UrlUtils;
@@ -26,6 +28,7 @@ public class MovieAdapter extends RecyclerView.Adapter<MovieAdapter.ViewHolder> 
 
     public interface MovieAdapterClickHandler {
         void onClick(View view, Movie movie);
+        void onLongClick(View view, Movie movie, ImageView hiddenStar);
     }
 
     //Create the recycler
@@ -45,13 +48,6 @@ public class MovieAdapter extends RecyclerView.Adapter<MovieAdapter.ViewHolder> 
     @Override
     public void onBindViewHolder(ViewHolder holder, int position) {
         final Movie currentMovie = movieCollection.get(position);
-
-        holder.movieRatingView.setMax(10);
-        holder.movieRatingView.setSuffixText(" ");
-        float value = (float) (currentMovie.getMovieVoteAverage());
-        holder.movieRatingView.setProgress(value);
-        float currentProgress = holder.movieRatingView.getProgress();
-        holder.updateMovieRating(currentProgress);
         String moviePosterPath = UrlUtils.buildPosterPathUrl(currentMovie.getMoviePosterPath());
 
         Picasso.get()
@@ -69,16 +65,22 @@ public class MovieAdapter extends RecyclerView.Adapter<MovieAdapter.ViewHolder> 
         }
     }
 
+    public void setMovieCollection(List<Movie> movieReturn) {
+        movieCollection = movieReturn;
+        notifyDataSetChanged();
+    }
 
-    class ViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
-        final StaticProgressBar movieRatingView;
+
+    class ViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener, View.OnLongClickListener {
         final ImageView moviePoster;
+        final ImageView hiddenViewStar;
 
         private ViewHolder(View newView) {
             super(newView);
-            movieRatingView = newView.findViewById(R.id.movie_rating_view);
             moviePoster = newView.findViewById(R.id.movie_cardview_poster);
+            hiddenViewStar = newView.findViewById(R.id.hidden_star);
             newView.setOnClickListener(this);
+            newView.setOnLongClickListener(this);
         }
 
         @Override
@@ -87,47 +89,12 @@ public class MovieAdapter extends RecyclerView.Adapter<MovieAdapter.ViewHolder> 
             adapterClickHandler.onClick(v, currentMovie);
         }
 
-        void updateMovieRating(double currentProgress) {
-            if(currentProgress >= 7.00) {
-                movieRatingView.setTextColor(Color.parseColor("#ffffff"));
-                movieRatingView.setFinishedStrokeColor(Color.parseColor("#25cc00"));
-                movieRatingView.setUnfinishedStrokeColor(Color.parseColor("#b8ffc3"));
-                movieRatingView.setBackgroundResource(R.drawable.good_rounded_edge);
-                if (currentProgress >= 8.00) {
-                    movieRatingView.setBottomText("GREAT");
-                } else if (currentProgress >= 9.00) {
-                    movieRatingView.setBottomText("BEST");
-                } else {
-                    movieRatingView.setBottomText("GOOD");
-                }
-            } else if (currentProgress >= 4.25) {
-                movieRatingView.setTextColor(Color.parseColor("#ffffff"));
-                movieRatingView.setFinishedStrokeColor(Color.parseColor("#f5c400"));
-                movieRatingView.setUnfinishedStrokeColor(Color.parseColor("#ffe7ab"));
-                movieRatingView.setBackgroundResource(R.drawable.mid_rounded_edge);
-                if (currentProgress >= 6.00) {
-                    movieRatingView.setBottomText("AVERAGE");
-                } else if (currentProgress >=4.75) {
-                    movieRatingView.setBottomText("OKAY");
-                } else {
-                    movieRatingView.setBottomText("MEH..");
-                }
-            } else {
-                movieRatingView.setTextColor(Color.parseColor("#ffffff"));
-                movieRatingView.setFinishedStrokeColor(Color.parseColor("#dc0202"));
-                movieRatingView.setUnfinishedStrokeColor(Color.parseColor("#ffa1a1"));
-                movieRatingView.setBackgroundResource(R.drawable.bad_rounded_edge);
-                if (currentProgress >= 3.5) {
-                    movieRatingView.setBottomText("MEH");
-                } else if (currentProgress >= 2.00) {
-                    movieRatingView.setBottomText("AVOID");
-                } else if (currentProgress == 0.00) {
-                    movieRatingView.setBottomText("NO SCORE");
-                } else {
-                    movieRatingView.setBottomText("HARD PASS");
-                }
-            }
 
+        @Override
+        public boolean onLongClick(View v) {
+            Movie currentMovie = movieCollection.get(getAdapterPosition());
+            adapterClickHandler.onLongClick(v, currentMovie, hiddenViewStar);
+            return true;
         }
     }
 }

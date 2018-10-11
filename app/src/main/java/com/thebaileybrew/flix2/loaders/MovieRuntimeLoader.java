@@ -11,19 +11,17 @@ import com.thebaileybrew.flix2.utils.UrlUtils;
 import com.thebaileybrew.flix2.utils.jsonUtils;
 
 import java.net.URL;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 
-public class SingleMovieLoader extends AsyncTask<String, Void, List<Film>> {
-    private static final String TAG = SingleMovieLoader.class.getSimpleName();
+public class MovieRuntimeLoader extends AsyncTask<String, Void, List<Film>> {
+    private static final String TAG = MovieRuntimeLoader.class.getSimpleName();
+    private final static String TIME_FORMAT = "%02d:%02d";
 
-    private final TextView movieTag;
-    private final TextView movieGenre;
+    private final TextView movieTime;
 
-    public SingleMovieLoader (TextView movieTag, TextView movieGenre) {
-        this.movieTag = movieTag;
-        this.movieGenre = movieGenre;
+    public MovieRuntimeLoader(TextView movieTime) {
+        this.movieTime = movieTime;
     }
 
 
@@ -49,11 +47,20 @@ public class SingleMovieLoader extends AsyncTask<String, Void, List<Film>> {
     protected void onPostExecute(List<Film> films) {
         if (films != null) {
             Film currentFilm = films.get(0);
-            movieTag.setText(currentFilm.getMovieTagLine());
-            movieGenre.setText(currentFilm.getMovieGenre());
+            if (currentFilm.getMovieRuntime() == 0) {
+                movieTime.setText(R.string.unknown_time);
+            } else {
+                movieTime.setText(convertTime(currentFilm.getMovieRuntime()));
+            }
+
         }
 
         super.onPostExecute(films);
     }
 
+    private String convertTime(int runTime) {
+        int hours = runTime / 60;
+        int minutes = runTime % 60;
+        return String.format(Locale.US, TIME_FORMAT, hours, minutes);
+    }
 }

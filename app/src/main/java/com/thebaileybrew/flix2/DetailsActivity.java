@@ -6,6 +6,7 @@ import android.graphics.Color;
 import android.graphics.PorterDuff;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.os.Parcelable;
 import android.telecom.Call;
 import android.util.Log;
 import android.util.TypedValue;
@@ -13,17 +14,21 @@ import android.view.View;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
 import android.view.animation.OvershootInterpolator;
+import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import com.google.android.material.appbar.AppBarLayout;
+import com.google.android.material.tabs.TabLayout;
 import com.squareup.picasso.Picasso;
 import com.thebaileybrew.flix2.database.DatabaseClient;
 import com.thebaileybrew.flix2.interfaces.adapters.CollapsingToolbarListener;
 import com.thebaileybrew.flix2.interfaces.adapters.CreditsAdapter;
+import com.thebaileybrew.flix2.interfaces.adapters.DetailFragmentAdapter;
 import com.thebaileybrew.flix2.interfaces.adapters.StaticProgressBar;
 import com.thebaileybrew.flix2.loaders.CreditsLoader;
+import com.thebaileybrew.flix2.loaders.MovieRuntimeLoader;
 import com.thebaileybrew.flix2.loaders.SingleMovieLoader;
 import com.thebaileybrew.flix2.models.Credit;
 import com.thebaileybrew.flix2.models.Film;
@@ -39,11 +44,12 @@ import java.util.concurrent.ExecutionException;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
+import androidx.viewpager.widget.ViewPager;
 
 import static android.view.View.INVISIBLE;
 import static android.view.View.VISIBLE;
 
-public class DetailsActivity extends AppCompatActivity {
+public class DetailsActivity extends AppCompatActivity implements View.OnClickListener {
     private final static String TAG = DetailsActivity.class.getSimpleName();
 
     private final static String MOVIE_KEY = "parcel_movie";
@@ -55,24 +61,19 @@ public class DetailsActivity extends AppCompatActivity {
     private LinearLayout movieDetailsLayout;
     private TextView movieRuntime;
     private TextView movieRelease;
-    private TextView movieRating;
     private StaticProgressBar movieRatingBar;
-    private TextView movieOverview;
     private Animation animScaleDown, animFadeOut;
     private Animation animScaleUp, animFadeIn;
     private Boolean posterHidden = false;
     private double currentFilmRating;
-    private TextView ratingTitleHeader;
-    private TextView movieTagline;
-    private TextView movieGenres;
     private View scrimView;
-    private static List<Credit> credits = new ArrayList<>();
-    private static RecyclerView creditsRecycler;
-    private TextView noCreditsText;
-    private List<Film> arrayFilm = new ArrayList<>();
     private boolean landscapeMode;
-
-    private static CreditsAdapter creditsAdapter;
+    private boolean isFavorite;
+    private boolean isInterested;
+    private ImageButton movieFavorite;
+    private ImageButton movieToWatch;
+    private static Movie movie;
+    private ViewPager viewPager;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -83,19 +84,39 @@ public class DetailsActivity extends AppCompatActivity {
         Log.e(TAG, "onCreate: heightpx: " + getResources().getDisplayMetrics().heightPixels);
         defineAnimations();
         initViews();
+
         //Setup the toolbar with navigation back
         setSupportActionBar(mToolbar);
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
         mToolbar.getNavigationIcon().setColorFilter(getResources().getColor(R.color.colorPrimaryText), PorterDuff.Mode.SRC_ATOP);
+        viewPager = findViewById(R.id.pager_viewpager);
+        DetailFragmentAdapter fragmentAdapter = new DetailFragmentAdapter(this, getSupportFragmentManager());
+        TabLayout tabLayout = findViewById(R.id.pager_tabs);
+        tabLayout.setupWithViewPager(viewPager, true);
+        viewPager.setAdapter(fragmentAdapter);
         Intent getMovieIntent = getIntent();
         //Check for Parcelable data pass
         if (getMovieIntent != null) {
             if (getMovieIntent.hasExtra(MOVIE_KEY)) {
-                Movie movie = getMovieIntent.getParcelableExtra(MOVIE_KEY);
+                int movieID = getMovieIntent.getIntExtra(MOVIE_KEY, 0);
+                try {
+                    getMovieDetails(movieID);
+                } catch (ExecutionException ee) {
+                    Log.e(TAG, "onCreate: execution exemption", ee);
+                } catch (InterruptedException ie) {
+                    ie.printStackTrace();
+                }
+                try {
+                    Thread.sleep(100);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
                 getSupportActionBar().setTitle(movie.getMovieTitle());
                 getSupportActionBar().getThemedContext();
                 populateUI(movie);
                 currentFilmRating = movie.getMovieVoteAverage();
+                //Setup the ViewPager
+
             }
         }
         //Set up the CollapsingToolbar and attach a listener to determine the current state
@@ -126,6 +147,28 @@ public class DetailsActivity extends AppCompatActivity {
                 }
             }
         });
+        viewPager.getAdapter().notifyDataSetChanged();
+
+    }
+
+    private void getMovieDetails(final int movieID) throws ExecutionException, InterruptedException {
+        class getMovieSingle extends AsyncTask<Void, Void, Movie> {
+
+            @Override
+            protected Movie doInBackground(Void... voids) {
+                return DatabaseClient.getInstance(FlixApplication.getContext()).getAppDatabase()
+                        .movieDao().loadSingleMovies(movieID);
+            }
+
+            @Override
+            protected void onPostExecute(Movie thismovie) {
+                super.onPostExecute(thismovie);
+                Log.e(TAG, "onPostExecute: movie grabbed = " + movie.getMovieTitle() );
+                movie = thismovie;
+            }
+        }
+        getMovieSingle gms = new getMovieSingle();
+        movie = gms.execute().get();
     }
 
     //Method for declaring the Animation Effects that can happen to objects in any viewstate
@@ -197,13 +240,8 @@ public class DetailsActivity extends AppCompatActivity {
     private void hideRatingBar() {
         movieRatingBar.startAnimation(animFadeOut);
         movieRatingBar.setVisibility(INVISIBLE);
-        ratingTitleHeader.startAnimation(animFadeIn);
-        ratingTitleHeader.setVisibility(VISIBLE);
-        movieRating.startAnimation(animFadeIn);
-        movieRating.setVisibility(VISIBLE);
         if (landscapeMode) {
             hideStats();
-            hideCredits();
         }
     }
 
@@ -216,27 +254,12 @@ public class DetailsActivity extends AppCompatActivity {
     private void showRatingBar() {
         movieRatingBar.startAnimation(animFadeIn);
         movieRatingBar.setVisibility(VISIBLE);
-        ratingTitleHeader.startAnimation(animFadeOut);
-        ratingTitleHeader.setVisibility(INVISIBLE);
-        movieRating.startAnimation(animFadeOut);
-        movieRating.setVisibility(INVISIBLE);
         if (landscapeMode) {
             showStats();
-            showCredits();
         }
     }
 
-    //Method to display the Credits Recycler (only in Landscape)
-    private void showCredits() {
-        creditsRecycler.setAnimation(animFadeIn);
-        creditsRecycler.setVisibility(VISIBLE);
-    }
-
-    //Method to hide the Credits Recycler (only in Landscape)
-    private void hideCredits() {
-        creditsRecycler.setAnimation(animFadeOut);
-        creditsRecycler.setVisibility(INVISIBLE);
-    }
+    //TODO: LOOK AT FOR LANDSCAPE LAYOUT
 
     //Method to display the stats layout (only in Landscape)
     private void showStats() {
@@ -252,79 +275,46 @@ public class DetailsActivity extends AppCompatActivity {
 
     //Populate the UI with the details pulled from Async task and Parcelable
     private void populateUI(final Movie movie) {
-        //Set up the Credit Recycler
-        creditsRecycler = findViewById(R.id.credits_recycler);
+        movieFavorite.setOnClickListener(this);
+        movieToWatch.setOnClickListener(this);
+        //Check for Network Connectivity
         if (networkUtils.checkNetwork(DetailsActivity.this)) {
-            //Load all data from credits json & details json
-            LinearLayoutManager linearLayoutManager = new LinearLayoutManager(this,
-                    LinearLayoutManager.HORIZONTAL,false);
-            Log.e(TAG, "populateUI: " + String.valueOf(movie.getMovieID()));
-            getCredits(String.valueOf(movie.getMovieID()));
-            creditsRecycler.setLayoutManager(linearLayoutManager);
-            CreditsLoader creditsLoader = new CreditsLoader();
-            creditsLoader.execute(String.valueOf(movie.getMovieID()));
-            //Set up the details for single film details
-            SingleMovieLoader singleMovieLoader = new SingleMovieLoader();
-            singleMovieLoader.execute(String.valueOf(movie.getMovieID()));
-            loadExtraDetails(String.valueOf(movie.getMovieID()));
-
+            //GET MOVIE RUNTIME FROM API QUERY
+            MovieRuntimeLoader movieRuntimeLoader = new MovieRuntimeLoader(movieRuntime);
+            movieRuntimeLoader.execute(String.valueOf(movie.getMovieID()));
         } else {
-            //Load only data from Intent and add network message
-            noCreditsText.setText(R.string.check_network_credits_display);
-            creditsRecycler.setVisibility(INVISIBLE);
+            //LOAD ONLY WHEN NO INTERNET
             movieRuntime.setText(R.string.unknown_time);
         }
         //Load the imagery into the Toolbar and the Poster image
         Picasso.get().load(UrlUtils.buildPosterPathUrl(movie.getMoviePosterPath())).into(poster);
         Picasso.get().load(UrlUtils.buildBackdropUrl(movie.getMovieBackdrop(), movie.getMoviePosterPath())).into(posterImage);
-        movieOverview.setText(movie.getMovieOverview());
-
+        //Load the rating and release date from db
         String fullRating = String.valueOf(trimRating((float)movie.getMovieVoteAverage()));
-        movieRating.setText(fullRating);
         movieRelease.setText(formatDate(movie.getMovieReleaseDate()));
 
-    }
-
-    private static void loadExtraDetails(final String movieID) {
-        class GetDetails extends AsyncTask<Void, Void, List<Film>> {
-            @Override
-            protected List<Film> doInBackground(Void... voids) {
-                Log.e(TAG, "doInBackground: loading details");
-                return DatabaseClient.getInstance(FlixApplication.getContext()).getAppDatabase()
-                        .filmDao().loadSingleFilm(movieID);
-            }
-
-            @Override
-            protected void onPostExecute(List<Film> films) {
-                super.onPostExecute(films);
-                Log.e(TAG, "onPostExecute: details loaded" + films.size());
-            }
+        int currentStar = movie.getMovieFavorite();
+        switch (currentStar) {
+            case 1: //MOVIE IS FAVORITE
+                movieFavorite.setImageResource(R.drawable.ic_star_border);
+                movieToWatch.setImageResource(R.drawable.ic_star);
+                isFavorite = true;
+                isInterested = false;
+                break;
+            case 2: //MOVIE IS INTERESTED
+                movieFavorite.setImageResource(R.drawable.ic_star);
+                movieToWatch.setImageResource(R.drawable.ic_star_interested);
+                isFavorite = false;
+                isInterested = true;
+                break;
+            case 0: //MOVIE IS NOT FAVORITE nor INTERESTED
+            default:
+                movieFavorite.setImageResource(R.drawable.ic_star);
+                movieToWatch.setImageResource(R.drawable.ic_star);
+                isFavorite = false;
+                isInterested = false;
+                break;
         }
-        GetDetails gd = new GetDetails();
-        gd.execute();
-    }
-
-    private static void getCredits(final String movieID) {
-        class GetCredits extends AsyncTask<Void, Void, List<Credit>> {
-            @Override
-            protected List<Credit> doInBackground(Void... voids) {
-                Log.e(TAG, "doInBackground: loading credits");
-                credits = DatabaseClient.getInstance(FlixApplication.getContext()).getAppDatabase()
-                        .creditDao().loadSingleFilmCredit(movieID);
-                return credits;
-            }
-
-            @Override
-            protected void onPostExecute(List<Credit> credits) {
-                super.onPostExecute(credits);
-                creditsAdapter = new CreditsAdapter(FlixApplication.getContext(), credits,
-                        creditsRecycler);
-                creditsRecycler.setAdapter(creditsAdapter);
-                Log.e(TAG, "onPostExecute: credits loaded");
-            }
-        }
-        GetCredits gc = new GetCredits();
-        gc.execute();
     }
 
     //Trim the rating value to two digits
@@ -356,21 +346,91 @@ public class DetailsActivity extends AppCompatActivity {
     private void initViews() {
         mToolbar = findViewById(R.id.toolbar);
         scrimView = findViewById(R.id.scrim_view);
-        noCreditsText = findViewById(R.id.no_credits_view);
-        creditsRecycler = findViewById(R.id.credits_recycler);
         poster = findViewById(R.id.poster);
         posterImage = findViewById(R.id.poster_imageview);
         movieDetailsLayout = findViewById(R.id.linear_layout_headers_details);
         movieRuntime = findViewById(R.id.movie_runtime);
         movieRelease = findViewById(R.id.movie_release);
-        movieRating = findViewById(R.id.movie_rating);
         movieRatingBar = findViewById(R.id.progress);
-        movieOverview = findViewById(R.id.synopsis_text);
-        movieOverview.setTextSize(TypedValue.COMPLEX_UNIT_PX, getResources().getDimension(R.dimen.text_20sp));
-        movieTagline = findViewById(R.id.movie_tagline);
-        movieGenres = findViewById(R.id.movie_genres);
-        ratingTitleHeader = findViewById(R.id.rating_title);
+        movieFavorite = findViewById(R.id.favorite_button);
+        movieToWatch = findViewById(R.id.interested_button);
 
     }
 
+    @Override
+    public void onClick(View v) {
+        int updateValue;
+        switch (v.getId()) {
+            case R.id.favorite_button:
+                //TODO update db entry
+                if (isFavorite) {
+                    //MARK AS NOT FAVORITE
+                    isFavorite = false; //0
+                    updateValue = 0;
+                    updateDatabase(updateValue);
+                    movieFavorite.setImageResource(R.drawable.ic_star);
+                } else {
+                    //MARK AS NEW FAVORITE
+                    isFavorite = true; //1
+                    updateValue = 1;
+                    updateDatabase(updateValue);
+                    movieFavorite.setImageResource(R.drawable.ic_star_border);
+                    if (isInterested) {
+                        //REMOVE FROM INTERESTED
+                        isInterested = false; //0
+
+                        updateDatabase(updateValue);
+                        movieToWatch.setImageResource(R.drawable.ic_star);
+                    }
+                }
+                break;
+            case R.id.interested_button:
+                //TODO update db entry
+                if (isInterested) {
+                    //MARK AS NOT INTERESTED
+                    isInterested = false; //0
+                    updateValue = 0;
+                    updateDatabase(updateValue);
+                    movieToWatch.setImageResource(R.drawable.ic_star);
+                } else {
+                    //MARK AS NEW INTERESTED
+                    isInterested = true; //2
+                    updateValue = 2;
+                    updateDatabase(updateValue);
+                    movieToWatch.setImageResource(R.drawable.ic_star_interested);
+                    if (isFavorite) {
+                        //REMOVE FROM FAVORITES
+                        isFavorite = false; //0
+                        updateDatabase(updateValue);
+                        movieFavorite.setImageResource(R.drawable.ic_star);
+                    }
+                }
+                break;
+            default:
+                break;
+        }
+    }
+
+    private void updateDatabase(final int update) {
+        class UpdateMovieRecord extends AsyncTask<Void, Void, Movie> {
+            @Override
+            protected Movie doInBackground(Void... voids) {
+                movie.setMovieFavorite(update);
+                DatabaseClient.getInstance(FlixApplication.getContext()).getAppDatabase()
+                        .movieDao().updateMovie(movie);
+                return null;
+            }
+
+            @Override
+            protected void onPostExecute(Movie movie) {
+                super.onPostExecute(movie);
+            }
+        }
+        UpdateMovieRecord umr = new UpdateMovieRecord();
+        umr.execute();
+    }
+
+    public static Movie getSelected() {
+        return movie;
+    }
 }

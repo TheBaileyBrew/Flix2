@@ -7,7 +7,7 @@ import androidx.room.ColumnInfo;
 import androidx.room.Entity;
 import androidx.room.PrimaryKey;
 
-@Entity(tableName = "themovies")
+@Entity(tableName = "allmovies")
 public class Movie implements Parcelable{
     //This class model is for the basic details of the film
 
@@ -23,7 +23,7 @@ public class Movie implements Parcelable{
         }
     };
 
-    @PrimaryKey(autoGenerate = false)
+    @PrimaryKey
     @ColumnInfo(name = "movie_id")
     private int movieID;
 
@@ -54,6 +54,9 @@ public class Movie implements Parcelable{
     @ColumnInfo(name = "movie_release_date")
     private String movieReleaseDate;
 
+    @ColumnInfo(name = "favorite")
+    private int movieFavorite;
+
     public Movie() {}
 
     private Movie(Parcel in) {
@@ -67,6 +70,7 @@ public class Movie implements Parcelable{
         movieBackdrop = in.readString();
         movieOverview = in.readString();
         movieReleaseDate = in.readString();
+        movieFavorite = in.readInt();
     }
 
     public int getMovieID() {
@@ -149,6 +153,14 @@ public class Movie implements Parcelable{
         this.movieReleaseDate = movieReleaseDate;
     }
 
+    public int getMovieFavorite() {
+        return movieFavorite;
+    }
+
+    public void setMovieFavorite(int movieFavorite) {
+        this.movieFavorite = movieFavorite;
+    }
+
     //Parcelable implementation
 
     @Override
@@ -168,5 +180,6 @@ public class Movie implements Parcelable{
         parcel.writeString(movieBackdrop);
         parcel.writeString(movieOverview);
         parcel.writeString(movieReleaseDate);
+        parcel.writeInt(movieFavorite);
     }
 }

@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <color name="colorPrimary">#285929</color>
+    <color name="colorPrimaryTextSelected">#109c13</color>
     <color name="colorPrimaryText">#fdfdfd</color>
     <color name="colorPrimaryFade">#202020</color>
     <color name="colorPrimaryDark">#424242</color>
@@ -19,4 +20,7 @@
     <color name="colorMidFade">#90f5c400</color>
     <!-- LOW -->
     <color name="colorLowFade">#90dc0202</color>
+
+    <color name="colorInterested">#00f2ff</color>
+    <color name="colorFavorite">#ff0000</color>
 </resources>

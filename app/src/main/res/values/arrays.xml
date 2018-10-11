@@ -1,17 +1,23 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <!-- Array Values for SORT BY Preference-->
     <string-array name="preference_sort_options">
         <item>@string/preference_sort_popular_label</item>
         <item>@string/preference_sort_top_rated_label</item>
         <item>@string/preference_sort_release_date_label</item>
+        <item>@string/preference_sort_favorites_label</item>
+        <item>@string/preference_sort_watchlist_label</item>
     </string-array>
 
     <string-array name="preference_sort_values">
         <item>@string/preference_sort_popular</item>
         <item>@string/preference_sort_top_rated</item>
         <item>@string/preference_sort_most_recent</item>
+        <item>@string/preference_sort_favorite</item>
+        <item>@string/preference_sort_watchlist</item>
     </string-array>
 
+    <!-- Array Values for LANGUAGE Preference-->
     <string-array name="preference_sort_language_options">
         <item>@string/preference_sort_language_label_eng</item>
         <item>@string/preference_sort_language_label_chinese</item>
