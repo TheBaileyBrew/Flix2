@@ -22,6 +22,13 @@ public class UrlUtils {
     private static final String BASE_MOVIE_PATH_DISCOVER = "discover";
     private static final String BASE_MOVIE_PATH_SEARCH = "search";
     private static final String BASE_CREDIT_PATH = "credits";
+    private static final String BASE_VIDEO_PATH = "videos";
+    private static final String BASE_REVIEW_PATH = "reviews";
+
+    private static final String BASE_YOUTUBE_URL = "https://www.youtube.com/";
+    private static final String BASE_YOUTUBE_WATCH = "watch?v=";
+    private static final String BASE_YOUTUBE_IMAGE_URL = "https://img.youtube.com/vi/";
+    private static final String BASE_YOUTUBE_IMAGE_FULLSIZE = "/0.jpg";
 
     private static final String API_KEY = "api_key";
     private static final String SORT_BY = "sort_by";
@@ -32,6 +39,7 @@ public class UrlUtils {
     private static final String RELEASE_DATE_START = "release_date.gte";
     private static final String RELEASE_DATE_END = "release_date.lte";
     private static final String QUERY = "query";
+
 
     private static String baseMovieQueryUrl(String apiKey) {
         Uri movieQuery = Uri.parse(BASE_MOVIE_URL).buildUpon()
@@ -221,5 +229,52 @@ public class UrlUtils {
     //Build the credit image url
     public static String buildCreditImageUrl (String creditPath) {
         return BASE_IMAGE_URL + BASE_IMAGE_LARGE + creditPath;
+    }
+
+    //Build the Review Details
+    public static URL buildReviewUrl (String apiKey, String movieID) {
+        Uri reviewLinkQuery = Uri.parse(BASE_MOVIE_URL).buildUpon()
+                .appendEncodedPath(BASE_MOVIE_PATH)
+                .appendPath(movieID)
+                .appendPath(BASE_REVIEW_PATH)
+                .appendQueryParameter(API_KEY, apiKey)
+                .build();
+        URL reviewQueryURL;
+        try {
+            reviewQueryURL = new URL(reviewLinkQuery.toString());
+            return reviewQueryURL;
+        } catch (MalformedURLException me) {
+            Log.e(TAG, "buildReviewUrl: failed to build reviews url", me);
+            return null;
+        }
+    }
+
+    //Build the Video details
+    public static URL buildVideoUrl (String apiKey, String movieID) {
+        Uri youtubeLinkQuery = Uri.parse(BASE_MOVIE_URL).buildUpon()
+                .appendPath(BASE_MOVIE_PATH)
+                .appendPath(movieID)
+                .appendPath(BASE_VIDEO_PATH)
+                .appendQueryParameter(API_KEY, apiKey)
+                .build();
+        URL videosQueryURL;
+        try {
+            videosQueryURL = new URL(youtubeLinkQuery.toString());
+            return videosQueryURL;
+        } catch (MalformedURLException mue) {
+            Log.e(TAG, "buildVideoUrl: failed to build video url", mue);
+            return null;
+        }
+    }
+
+    //Build the Youtube Video url
+    public static String buildYoutubeTrailerUrl (String youtubePath) {
+        return BASE_YOUTUBE_URL + BASE_YOUTUBE_WATCH + youtubePath;
+    }
+
+    //Build the Youtube Image url
+    public static String buildYoutubeImageUrl (String youtubeImage) {
+        Log.e(TAG, "buildYoutubeImageUrl: returned value: " + BASE_YOUTUBE_IMAGE_URL + youtubeImage + BASE_YOUTUBE_IMAGE_FULLSIZE);
+        return BASE_YOUTUBE_IMAGE_URL + youtubeImage + BASE_YOUTUBE_IMAGE_FULLSIZE;
     }
 }

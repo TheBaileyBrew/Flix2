@@ -9,6 +9,8 @@ import com.thebaileybrew.flix2.database.DatabaseClient;
 import com.thebaileybrew.flix2.models.Credit;
 import com.thebaileybrew.flix2.models.Film;
 import com.thebaileybrew.flix2.models.Movie;
+import com.thebaileybrew.flix2.models.Review;
+import com.thebaileybrew.flix2.models.Videos;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -49,6 +51,21 @@ public class jsonUtils {
     private static final String CREDIT_ACTOR = "name";
     private static final String CREDIT_IMAGE = "profile_path";
 
+    private static final String VIDEO_LIST = "results";
+    private static final String VIDEO_ID = "id";
+    private static final String VIDEO_KEY = "key";
+    private static final String VIDEO_NAME = "name";
+    private static final String VIDEO_SIZE = "size";
+    private static final String VIDEO_TYPE = "type";
+
+    private static final String REVIEW_LIST = "results";
+    private static final String REVIEW_AUTHOR = "author";
+    private static final String REVIEW_CONTENT = "content";
+    private static final String REVIEW_ID = "id";
+    private static final String REVIEW_LINK = "url";
+
+
+
     private jsonUtils(){}
 
     //Get All Movie Data
@@ -87,22 +104,6 @@ public class jsonUtils {
         }
         return jsonResponse;
     }
-
-    //Read All Movie Data
-    private static String readFromStream(InputStream inputStream) throws IOException {
-        StringBuilder output = new StringBuilder();
-        if (inputStream != null) {
-            InputStreamReader inputStreamReader = new InputStreamReader(inputStream, Charset.forName("UTF-8"));
-            BufferedReader reader = new BufferedReader(inputStreamReader);
-            String line = reader.readLine();
-            while (line != null) {
-                output.append(line);
-                line = reader.readLine();
-            }
-        }
-        return output.toString();
-    }
-
     //Extract & Return All Movie Data
     public static ArrayList<Movie> extractMoviesFromJson(String jsonData) {
         int movieID;
@@ -170,7 +171,6 @@ public class jsonUtils {
         }
         return movieCollection;
     }
-
     //Create the Async to load movie details into the database
     private static void loadMovieDetail(final Movie movie) {
 
@@ -219,7 +219,7 @@ public class jsonUtils {
             //If successful request
             if (urlConnection.getResponseCode() == 200) {
                 inputStream = urlConnection.getInputStream();
-                jsonResponse = readSingleFilmStream(inputStream);
+                jsonResponse = readFromStream(inputStream);
             } else {
                 Log.e(TAG, "requestHttpsSingleFilm: Errod code: "
                         + urlConnection.getResponseCode());
@@ -236,22 +236,6 @@ public class jsonUtils {
         }
         return jsonResponse;
     }
-
-    //Read Single Movie Detail Extra Data
-    private static String readSingleFilmStream(InputStream inputStream) throws IOException {
-        StringBuilder output = new StringBuilder();
-        if (inputStream != null) {
-            InputStreamReader inputStreamReader = new InputStreamReader(inputStream, Charset.forName("UTF-8"));
-            BufferedReader reader = new BufferedReader(inputStreamReader);
-            String line = reader.readLine();
-            while (line != null) {
-                output.append(line);
-                line = reader.readLine();
-            }
-        }
-        return output.toString();
-    }
-
     //Extract & Return Single Movie Detail Extra Data
     public static ArrayList<Film> extractSingleFilmData(String jsonReturn) {
         String movieTagline;
@@ -287,7 +271,6 @@ public class jsonUtils {
         return movieExtraDetails;
     }
 
-
     //Get Single Movie Credit Details
     public static String requestHttpsMovieCredits (URL url) throws IOException {
         String jsonResponse = "";
@@ -308,7 +291,7 @@ public class jsonUtils {
             //If successful
             if (urlConnection.getResponseCode() == 200) {
                 inputStream = urlConnection.getInputStream();
-                jsonResponse = readCreditsFromStream(inputStream);
+                jsonResponse = readFromStream(inputStream);
             } else {
                 Log.e(TAG, "requestHttpsMovieCredits: Error code: "
                         + urlConnection.getResponseCode() );
@@ -325,22 +308,6 @@ public class jsonUtils {
         }
         return jsonResponse;
     }
-
-    //Read Single Movie Credit Details
-    private static String readCreditsFromStream(InputStream inputStream) throws IOException {
-        StringBuilder output = new StringBuilder();
-        if (inputStream != null) {
-            InputStreamReader inputStreamReader = new InputStreamReader(inputStream, Charset.forName("UTF-8"));
-            BufferedReader reader = new BufferedReader(inputStreamReader);
-            String line = reader.readLine();
-            while (line != null) {
-                output.append(line);
-                line = reader.readLine();
-            }
-        }
-        return output.toString();
-    }
-
     //Extract Single Movie Credit Details
     public static ArrayList<Credit> extractCreditDetails(String jsonReturn) {
         String characterName;
@@ -386,6 +353,204 @@ public class jsonUtils {
             Log.e(TAG, "extractCreditDetails: problem getting credits", je);
         }
         return movieCredits;
+    }
+
+    //Get Single Movie Video Details
+    public static String requestHttpsMovieVideos (URL url) throws IOException {
+        String jsonResponse = "";
+        //Check for NULL
+        if (url == null) {
+            return jsonResponse;
+        }
+
+        HttpsURLConnection urlConnection = null;
+        InputStream inputStream = null;
+
+        try {
+            urlConnection = (HttpsURLConnection) url.openConnection();
+            urlConnection.setReadTimeout(12000);
+            urlConnection.setConnectTimeout(20000);
+            urlConnection.setRequestMethod("GET");
+            urlConnection.connect();
+            //If successful
+            if (urlConnection.getResponseCode() == 200) {
+                inputStream = urlConnection.getInputStream();
+                jsonResponse = readFromStream(inputStream);
+            } else {
+                Log.e(TAG, "requestHttpsMovieVideos: Error code: "
+                        + urlConnection.getResponseCode() );
+            }
+        } catch (IOException ie) {
+            Log.e(TAG, "requestHttpsMovieVideos: Could not retrieve JSON", ie);
+        } finally {
+            if (urlConnection != null) {
+                urlConnection.disconnect();
+            }
+            if (inputStream != null) {
+                inputStream.close();
+            }
+        }
+        return jsonResponse;
+    }
+    //Extract Single Movie Credit Details
+    public static ArrayList<Videos> extractVideosDetails(String jsonReturn) {
+        String videoID;
+        String videoName;
+        String videoKey;
+        String videoSize;
+        String videoType;
+
+        if (TextUtils.isEmpty(jsonReturn)) {
+            return null;
+        }
+        ArrayList<Videos> movieVideos = new ArrayList<>();
+        try {
+            JSONObject baseJSONResponse = new JSONObject(jsonReturn);
+            JSONArray videosList = baseJSONResponse.getJSONArray(VIDEO_LIST);
+            if (TextUtils.isEmpty(String.valueOf(videosList))) {
+                return null;
+            }
+            if (videosList.length() < 10) {
+                for (int c = 0; c < 2; c++) {
+                    JSONObject currentVideo = videosList.getJSONObject(c);
+                    videoID = currentVideo.getString(VIDEO_ID);
+                    videoName = currentVideo.getString(VIDEO_NAME);
+                    videoKey = currentVideo.getString(VIDEO_KEY);
+                    videoSize = currentVideo.getString(VIDEO_SIZE);
+                    videoType = currentVideo.getString(VIDEO_TYPE);
+                    Videos video = new Videos();
+                    video.setVideoID(videoID);
+                    video.setVideoName(videoName);
+                    video.setVideoKey(videoKey);
+                    video.setVideoSize(videoSize);
+                    video.setVideoType(videoType);
+                    movieVideos.add(video);
+                }
+            } else {
+                for (int c = 0; c < videosList.length(); c++) {
+                    JSONObject currentVideo = videosList.getJSONObject(c);
+                    videoID = currentVideo.getString(VIDEO_ID);
+                    videoName = currentVideo.getString(VIDEO_NAME);
+                    videoKey = currentVideo.getString(VIDEO_KEY);
+                    videoSize = currentVideo.getString(VIDEO_SIZE);
+                    videoType = currentVideo.getString(VIDEO_TYPE);
+                    Videos video = new Videos();
+                    video.setVideoID(videoID);
+                    video.setVideoName(videoName);
+                    video.setVideoKey(videoKey);
+                    video.setVideoSize(videoSize);
+                    video.setVideoType(videoType);
+                    movieVideos.add(video);
+                }
+            }
+        } catch (JSONException je) {
+            Log.e(TAG, "extractVideoDetails: problem getting videos", je);
+        }
+        return movieVideos;
+    }
+
+    //Get Single Movie Review Details
+    public static String requestHttpsMovieReviews (URL url) throws IOException {
+        String jsonResponse = "";
+        //Check for NULL
+        if (url == null) {
+            return jsonResponse;
+        }
+
+        HttpsURLConnection urlConnection = null;
+        InputStream inputStream = null;
+
+        try {
+            urlConnection = (HttpsURLConnection) url.openConnection();
+            urlConnection.setReadTimeout(12000);
+            urlConnection.setConnectTimeout(20000);
+            urlConnection.setRequestMethod("GET");
+            urlConnection.connect();
+            //If successful
+            if (urlConnection.getResponseCode() == 200) {
+                inputStream = urlConnection.getInputStream();
+                jsonResponse = readFromStream(inputStream);
+            } else {
+                Log.e(TAG, "requestHttpsMovieReviews: Error code: "
+                        + urlConnection.getResponseCode() );
+            }
+        } catch (IOException ie) {
+            Log.e(TAG, "requestHttpsMovieReviews: Could not retrieve JSON", ie);
+        } finally {
+            if (urlConnection != null) {
+                urlConnection.disconnect();
+            }
+            if (inputStream != null) {
+                inputStream.close();
+            }
+        }
+        return jsonResponse;
+    }
+    //Extract Single Movie Review Details
+    public static ArrayList<Review> extractReviewDetails(String jsonReturn) {
+        String reviewID;
+        String reviewContent;
+        String reviewAuthor;
+        String reviewLink;
+
+        if (TextUtils.isEmpty(jsonReturn)) {
+            return null;
+        }
+        ArrayList<Review> movieReviews = new ArrayList<>();
+        try {
+            JSONObject baseJSONResponse = new JSONObject(jsonReturn);
+            JSONArray reviewList = baseJSONResponse.getJSONArray(REVIEW_LIST);
+            if (TextUtils.isEmpty(String.valueOf(reviewList))) {
+                return null;
+            }
+            if (reviewList.length() < 10) {
+                for (int c = 0; c < 2; c++) {
+                    JSONObject currentReview = reviewList.getJSONObject(c);
+                    reviewID = currentReview.getString(REVIEW_ID);
+                    reviewContent = currentReview.getString(REVIEW_CONTENT);
+                    reviewAuthor = currentReview.getString(REVIEW_AUTHOR);
+                    reviewLink = currentReview.getString(REVIEW_LINK);
+                    Review review = new Review();
+                    review.setReviewID(reviewID);
+                    review.setReviewContent(reviewContent);
+                    review.setReviewAuthor(reviewAuthor);
+                    review.setReviewLink(reviewLink);
+                    movieReviews.add(review);
+                }
+            } else {
+                for (int c = 0; c < reviewList.length(); c++) {
+                    JSONObject currentReview = reviewList.getJSONObject(c);
+                    reviewID = currentReview.getString(REVIEW_ID);
+                    reviewContent = currentReview.getString(REVIEW_CONTENT);
+                    reviewAuthor = currentReview.getString(REVIEW_AUTHOR);
+                    reviewLink = currentReview.getString(REVIEW_LINK);
+                    Review review = new Review();
+                    review.setReviewID(reviewID);
+                    review.setReviewContent(reviewContent);
+                    review.setReviewAuthor(reviewAuthor);
+                    review.setReviewLink(reviewLink);
+                    movieReviews.add(review);
+                }
+            }
+        } catch (JSONException je) {
+            Log.e(TAG, "extractVideoDetails: problem getting videos", je);
+        }
+        return movieReviews;
+    }
+
+    //Read All Movie Data
+    private static String readFromStream(InputStream inputStream) throws IOException {
+        StringBuilder output = new StringBuilder();
+        if (inputStream != null) {
+            InputStreamReader inputStreamReader = new InputStreamReader(inputStream, Charset.forName("UTF-8"));
+            BufferedReader reader = new BufferedReader(inputStreamReader);
+            String line = reader.readLine();
+            while (line != null) {
+                output.append(line);
+                line = reader.readLine();
+            }
+        }
+        return output.toString();
     }
 
 }
