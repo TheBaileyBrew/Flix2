@@ -37,26 +37,29 @@ public class MoviePreferences extends AppCompatActivity {
             super.onCreate(savedInstanceState);
             addPreferencesFromResource(R.xml.settings_main);
 
+            final Preference sortOrder = findPreference(getString(R.string.preference_sort_key));
+            bindPreferenceSummaryToValue(sortOrder);
+
+            final Preference sortLanguage = findPreference(getString(R.string.preference_sort_language_key));
+            bindPreferenceSummaryToValue(sortLanguage);
+
+            final Preference yearFilter = findPreference(getString(R.string.preference_year_key));
+            bindPreferenceSummaryToValue(yearFilter);
+
             Preference clearSettings = findPreference("clear_settings");
             clearSettings.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
                 @Override
                 public boolean onPreferenceClick(Preference preference) {
                     SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(getActivity());
                     SharedPreferences.Editor prefsEditor = sharedPrefs.edit();
+                    sortOrder.setSummary("");
+                    sortLanguage.setSummary("");
+                    yearFilter.setSummary("");
                     prefsEditor.clear();
                     prefsEditor.apply();
                     return false;
                 }
             });
-
-            Preference sortOrder = findPreference(getString(R.string.preference_sort_key));
-            bindPreferenceSummaryToValue(sortOrder);
-
-            Preference sortLanguage = findPreference(getString(R.string.preference_sort_language_key));
-            bindPreferenceSummaryToValue(sortLanguage);
-
-            Preference yearFilter = findPreference(getString(R.string.preference_year_key));
-            bindPreferenceSummaryToValue(yearFilter);
 
         }
 

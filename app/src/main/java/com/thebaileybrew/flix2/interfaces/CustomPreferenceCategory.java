@@ -25,7 +25,7 @@ public class CustomPreferenceCategory extends PreferenceCategory {
     protected void onBindView(View view) {
         super.onBindView(view);
         TextView titleView = view.findViewById(android.R.id.title);
-        titleView.setTextColor(Color.argb(225,0,230,118));
+        titleView.setTextColor(Color.argb(225,16,156,19));
         titleView.setTextSize(20);
     }
 }

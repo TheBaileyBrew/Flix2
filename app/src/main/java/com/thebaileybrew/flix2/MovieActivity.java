@@ -38,6 +38,7 @@ import java.util.List;
 import java.util.Random;
 import java.util.concurrent.ExecutionException;
 
+import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.SearchView;
@@ -77,7 +78,7 @@ public class MovieActivity extends AppCompatActivity implements MovieAdapter.Mov
     private Animation animScaleUp, animFadeIn;
 
     @Override
-    protected void onCreate(Bundle savedInstanceState) {
+    protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_movie);
         initViews();
@@ -243,6 +244,7 @@ public class MovieActivity extends AppCompatActivity implements MovieAdapter.Mov
         }
     }
 
+
     private void getSharedPreferences() {
         sharedPrefs = PreferenceManager.getDefaultSharedPreferences(FlixApplication.getContext());
         //Get the sorting method from shared prefs
@@ -321,7 +323,7 @@ public class MovieActivity extends AppCompatActivity implements MovieAdapter.Mov
         mRecyclerView.setLayoutManager(gridLayoutManager);
         mRecyclerView.setHasFixedSize(true);
         mRecyclerView.setAdapter(adapter);
-        mRecyclerView.getLayoutManager().onRestoreInstanceState(savedRecyclerState);
+        gridLayoutManager.onRestoreInstanceState(savedRecyclerState);
         swipeRefresh.setRefreshing(false);
     }
 
@@ -331,25 +333,30 @@ public class MovieActivity extends AppCompatActivity implements MovieAdapter.Mov
         mRecyclerView.setLayoutManager(gridLayoutManager);
         mRecyclerView.setHasFixedSize(true);
         mRecyclerView.setAdapter(mAdapter);
-        mRecyclerView.getLayoutManager().onRestoreInstanceState(savedRecyclerState);
+        gridLayoutManager.onRestoreInstanceState(savedRecyclerState);
         swipeRefresh.setRefreshing(false);
     }
 
     @Override
     public void onSaveInstanceState(Bundle outState) {
-        outState.putParcelableArrayList(SAVE_STATE, (ArrayList)movies);
-        //Declare the Recycler State
-        outState.putParcelable(RECYCLER_STATE, mRecyclerView.getLayoutManager().onSaveInstanceState());
         super.onSaveInstanceState(outState);
+        outState.putParcelableArrayList(SAVE_STATE, (ArrayList)movies);
+        outState.putParcelable(RECYCLER_STATE, gridLayoutManager.onSaveInstanceState());
+    }
+
+    @Override
+    public void onRestoreInstanceState(Bundle outState) {
+        super.onRestoreInstanceState(outState);
+        savedRecyclerState = outState.getParcelable(RECYCLER_STATE);
+        gridLayoutManager.onRestoreInstanceState(savedRecyclerState);
+
     }
 
     @Override
     public void onResume(){
         super.onResume();
         getSharedPreferences();
-        if (sharedPrefs.contains(SEARCHING)) {
-            queryResult = sharedPrefs.getString(SEARCHING, queryResult);
-        }
+        gridLayoutManager.onRestoreInstanceState(savedRecyclerState);
     }
 
     @Override
@@ -405,6 +412,7 @@ public class MovieActivity extends AppCompatActivity implements MovieAdapter.Mov
 
     }
 
+    //Declares the Animations used in this activity
     private void defineAnimations() {
         animScaleDown = AnimationUtils.loadAnimation(this, R.anim.anim_scale);
         animFadeOut = AnimationUtils.loadAnimation(this, R.anim.anim_fade_out_scale);
@@ -412,6 +420,7 @@ public class MovieActivity extends AppCompatActivity implements MovieAdapter.Mov
         animFadeIn = AnimationUtils.loadAnimation(this, R.anim.anim_fade_in_scale);
     }
 
+    //Creates and customizes the long-click dialog to add/remove/change favorites and watchlist items
     private void showSelectionDialog(int value, final Movie movie, final ImageView hidden) {
         final AlertDialog.Builder dialogBuilder = new AlertDialog.Builder(this);
         dialogBuilder.setMessage("Which List Should This Be Added To?");
@@ -480,14 +489,17 @@ public class MovieActivity extends AppCompatActivity implements MovieAdapter.Mov
 
     }
 
+    //Adds movie to Want To Watch List
     private void addToInterested(Movie movie) {
         updateDatabase(2, movie);
     }
 
+    //Adds movie to Favorites List
     private void addToFavorites(Movie movie) {
         updateDatabase(1, movie);
     }
 
+    //Removes movie from all lists
     private void removeFromAllLists(Movie movie) {
         updateDatabase(0, movie);
     }
