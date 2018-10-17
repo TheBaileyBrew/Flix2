@@ -184,7 +184,6 @@ public class jsonUtils {
                 //Add the movie to the Database
                 DatabaseClient.getInstance(FlixApplication.getContext()).getAppDatabase()
                         .movieDao().insertMovie(movie);
-                Log.e(TAG, "doInBackground: Movie added to DB");
                 return null;
             }
 
@@ -324,7 +323,7 @@ public class jsonUtils {
             if (TextUtils.isEmpty(String.valueOf(creditsList))) {
                 return null;
             }
-            if (creditsList.length() < 10) {
+            if (creditsList.length() > 10) {
                 for (int c = 0; c < 10; c++) {
                     JSONObject currentCharacter = creditsList.getJSONObject(c);
                     characterName = currentCharacter.getString(CREDIT_CHARACTER);

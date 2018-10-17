@@ -24,7 +24,6 @@ import android.widget.TextView;
 
 import com.google.android.material.textfield.TextInputEditText;
 import com.google.android.material.textfield.TextInputLayout;
-import com.thebaileybrew.flix2.database.AppDatabase;
 import com.thebaileybrew.flix2.database.DatabaseClient;
 import com.thebaileybrew.flix2.interfaces.MoviePreferences;
 import com.thebaileybrew.flix2.interfaces.adapters.MovieAdapter;
@@ -38,12 +37,12 @@ import java.util.List;
 import java.util.Random;
 import java.util.concurrent.ExecutionException;
 
-import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.SearchView;
 import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.recyclerview.widget.GridLayoutManager;
+import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
@@ -52,19 +51,26 @@ import static android.view.View.VISIBLE;
 public class MovieActivity extends AppCompatActivity implements MovieAdapter.MovieAdapterClickHandler {
     private final static String TAG = MovieActivity.class.getSimpleName();
 
-    private final static String SAVE_STATE = "save_state";
-    private final static String RECYCLER_STATE = "recycler_state";
+
+
     private final static String MOVIE_KEY = "parcel_movie";
-    private final static String SEARCHING = "searching";
+    private Parcelable recyclerState;
+    private final static String RECYCLER_STATE = "recycler_state";
+    private final static String RECYCLER_POSITION = "recycler_position";
+    private final static String RECYCLER_PREFS_POSITION = "prefs_position";
+    private final static String RECYCLER_LIST = "recycler_items";
+
+    private enum LayoutManagerType { GRID_LAYOUT_MANAGER }
+    protected LayoutManagerType mCurrentManager;
 
     private SharedPreferences sharedPrefs;
     private SharedPreferences.Editor prefsEditor;
 
-    private Parcelable savedRecyclerState;
     private String queryResult = "";
     private String sorting, language, filterYear;
 
     private RecyclerView mRecyclerView;
+    private int mScrollPosition;
     private List<Movie> movies = new ArrayList<>();
     private ConstraintLayout noNetworkLayout;
     private GridLayoutManager gridLayoutManager;
@@ -78,10 +84,11 @@ public class MovieActivity extends AppCompatActivity implements MovieAdapter.Mov
     private Animation animScaleUp, animFadeIn;
 
     @Override
-    protected void onCreate(@Nullable Bundle savedInstanceState) {
+    protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_movie);
         initViews();
+        setSwipeRefreshListener();
         defineAnimations();
 
         searchEntry.setOnEditorActionListener(new EditText.OnEditorActionListener() {
@@ -99,7 +106,6 @@ public class MovieActivity extends AppCompatActivity implements MovieAdapter.Mov
                             imm.hideSoftInputFromWindow(searchEntry.getWindowToken(), 0);
                         }
                         getSharedPreferences();
-                        loadMoviesFromPrefs();
                         hideSearchMenu();
                         swipeRefresh.setRefreshing(false);
                         return true;
@@ -109,33 +115,23 @@ public class MovieActivity extends AppCompatActivity implements MovieAdapter.Mov
             }
         });
 
-        if (savedInstanceState == null || !savedInstanceState.containsKey(SAVE_STATE)) {
-            movies = new ArrayList<>();
-        } else {
-            savedRecyclerState = savedInstanceState.getParcelable(RECYCLER_STATE);
-            movies = savedInstanceState.getParcelableArrayList(SAVE_STATE);
-        }
-
-        //Determines the correct number of columns to display depending on the screen orientation
-        int columnCount = displayMetricsUtils.calculateGridColumn(this);
-        gridLayoutManager = new GridLayoutManager(this, columnCount);
-        setSwipeRefreshListener();
-
         //Check for network
         if (networkUtils.checkNetwork(this)) {
             //Load Movies
             noNetworkLayout.setVisibility(View.INVISIBLE);
             mRecyclerView.setVisibility(VISIBLE);
-            loadMoviesFromPrefs();
         } else {
             //Show no connection layout
             mRecyclerView.setVisibility(View.INVISIBLE);
             noNetworkLayout.setVisibility(VISIBLE);
             swipeRefresh.setRefreshing(false);
-            loadMoviesFromPrefs();
         }
 
+        int columnIndex = displayMetricsUtils.calculateGridColumn(this);
+        gridLayoutManager = new GridLayoutManager(this, columnIndex);
+
     }
+
     //Sets up the listener for the SwipeRefreshLayout
     private void setSwipeRefreshListener() {
         swipeRefresh.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
@@ -244,7 +240,6 @@ public class MovieActivity extends AppCompatActivity implements MovieAdapter.Mov
         }
     }
 
-
     private void getSharedPreferences() {
         sharedPrefs = PreferenceManager.getDefaultSharedPreferences(FlixApplication.getContext());
         //Get the sorting method from shared prefs
@@ -316,14 +311,14 @@ public class MovieActivity extends AppCompatActivity implements MovieAdapter.Mov
 
     //Loads the recyclerview with data from json pull with shared preferences determining return
     private void buildRecycler(String sorting, String language, String filterYear) {
-        MovieAdapter adapter = new MovieAdapter(this, movies,this);
+        Log.e(TAG, "buildRecycler: null state: TRUE");
+        MovieAdapter adapter = new MovieAdapter(this, movies, this);
         MovieLoader movieLoader = new MovieLoader(adapter);
         movieLoader.execute(sorting, language, filterYear, queryResult);
-        //Run Async to get new movies for/from DB
         mRecyclerView.setLayoutManager(gridLayoutManager);
+        //Run Async to get new movies for/from DB
         mRecyclerView.setHasFixedSize(true);
         mRecyclerView.setAdapter(adapter);
-        gridLayoutManager.onRestoreInstanceState(savedRecyclerState);
         swipeRefresh.setRefreshing(false);
     }
 
@@ -333,30 +328,7 @@ public class MovieActivity extends AppCompatActivity implements MovieAdapter.Mov
         mRecyclerView.setLayoutManager(gridLayoutManager);
         mRecyclerView.setHasFixedSize(true);
         mRecyclerView.setAdapter(mAdapter);
-        gridLayoutManager.onRestoreInstanceState(savedRecyclerState);
         swipeRefresh.setRefreshing(false);
-    }
-
-    @Override
-    public void onSaveInstanceState(Bundle outState) {
-        super.onSaveInstanceState(outState);
-        outState.putParcelableArrayList(SAVE_STATE, (ArrayList)movies);
-        outState.putParcelable(RECYCLER_STATE, gridLayoutManager.onSaveInstanceState());
-    }
-
-    @Override
-    public void onRestoreInstanceState(Bundle outState) {
-        super.onRestoreInstanceState(outState);
-        savedRecyclerState = outState.getParcelable(RECYCLER_STATE);
-        gridLayoutManager.onRestoreInstanceState(savedRecyclerState);
-
-    }
-
-    @Override
-    public void onResume(){
-        super.onResume();
-        getSharedPreferences();
-        gridLayoutManager.onRestoreInstanceState(savedRecyclerState);
     }
 
     @Override
@@ -522,5 +494,6 @@ public class MovieActivity extends AppCompatActivity implements MovieAdapter.Mov
         UpdateMovieRecord umr = new UpdateMovieRecord();
         umr.execute();
     }
+
 
 }
