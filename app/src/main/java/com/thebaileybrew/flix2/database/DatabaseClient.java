@@ -1,9 +1,12 @@
 package com.thebaileybrew.flix2.database;
 
 import android.content.Context;
+import android.os.AsyncTask;
 import android.util.Log;
 
 import androidx.room.Room;
+import androidx.room.RoomDatabase;
+import androidx.sqlite.db.SupportSQLiteDatabase;
 
 public class DatabaseClient {
     private static final String TAG = AppDatabase.class.getSimpleName();
@@ -30,4 +33,5 @@ public class DatabaseClient {
     public AppDatabase getAppDatabase() {
         return appDatabase;
     }
+
 }

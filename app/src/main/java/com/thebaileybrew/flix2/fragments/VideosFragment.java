@@ -21,7 +21,9 @@ import com.thebaileybrew.flix2.utils.UrlUtils;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.ExecutionException;
 
+import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -41,8 +43,7 @@ public class VideosFragment extends Fragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View rootView = inflater.inflate(R.layout.videos_layout, container, false);
         movie = DetailsActivity.getSelected();
-        Log.e(TAG, "onCreateView: movie name is: " + movie.getMovieTitle() );
-        Log.e(TAG, "onCreateView: movie overview is: " + movie.getMovieOverview() );
+        ConstraintLayout noDataView = rootView.findViewById(R.id.no_trailers_constraint_layout);
         //DO STUFF HERE
         recyclerView = rootView.findViewById(R.id.videos_recycler);
         LinearLayoutManager linearLayoutManager = new LinearLayoutManager(FlixApplication.getContext());
@@ -61,8 +62,20 @@ public class VideosFragment extends Fragment {
         });
         recyclerView.setAdapter(videosAdapter);
         VideosLoader videosLoader = new VideosLoader(videosAdapter);
-        videosLoader.execute(String.valueOf(movie.getMovieID()));
-        videosAdapter.notifyDataSetChanged();
+        try {
+            videos = videosLoader.execute(String.valueOf(movie.getMovieID())).get();
+        } catch (ExecutionException e) {
+            e.printStackTrace();
+        } catch (InterruptedException e) {
+            Log.e(TAG, "onCreateView: error", e);;
+        }
+        if (videos.isEmpty()) {
+            Log.e(TAG, "onCreateView: vids empty");
+            noDataView.setVisibility(View.VISIBLE);
+        } else {
+            Log.e(TAG, "onCreateView: vids not empty");
+            noDataView.setVisibility(View.INVISIBLE);
+        }
         return rootView;
     }
 

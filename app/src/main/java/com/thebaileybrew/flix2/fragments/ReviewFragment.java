@@ -20,7 +20,9 @@ import com.thebaileybrew.flix2.models.Review;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.ExecutionException;
 
+import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -40,6 +42,7 @@ public class ReviewFragment extends Fragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View rootView = inflater.inflate(R.layout.reviews_layout, container, false);
         movie = DetailsActivity.getSelected();
+        ConstraintLayout noDataView = rootView.findViewById(R.id.no_reviews_constraint_layout);
         Log.e(TAG, "onCreateView: movie name is: " + movie.getMovieTitle() );
         Log.e(TAG, "onCreateView: movie overview is: " + movie.getMovieOverview() );
         //DO STUFF HERE
@@ -58,9 +61,18 @@ public class ReviewFragment extends Fragment {
         });
         reviewRecycler.setAdapter(reviewAdapter);
         ReviewLoader reviewLoader = new ReviewLoader(reviewAdapter);
-        reviewLoader.execute(String.valueOf(movie.getMovieID()));
-        reviewAdapter.notifyDataSetChanged();
-
+        try {
+            reviews = reviewLoader.execute(String.valueOf(movie.getMovieID())).get();
+        } catch (ExecutionException e) {
+            e.printStackTrace();
+        } catch (InterruptedException e) {
+            Log.e(TAG, "onCreateView: error", e);;
+        }
+        if (reviews.isEmpty()) {
+            noDataView.setVisibility(View.VISIBLE);
+        } else {
+            noDataView.setVisibility(View.INVISIBLE);
+        }
         return rootView;
     }
 

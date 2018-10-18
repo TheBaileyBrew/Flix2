@@ -4,6 +4,7 @@ import com.thebaileybrew.flix2.models.Movie;
 
 import java.util.List;
 
+import androidx.lifecycle.LiveData;
 import androidx.room.Dao;
 import androidx.room.Delete;
 import androidx.room.Insert;
@@ -14,10 +15,10 @@ import androidx.room.Update;
 @Dao
 public interface MovieDao {
     @Query("SELECT * FROM allmovies WHERE favorite = :favValue ORDER BY movie_id")
-    List<Movie> loadAllMovies(int favValue);
+    LiveData<List<Movie>> loadAllMovies(int favValue);
 
     @Query("SELECT * FROM allmovies WHERE movie_id = :movieID")
-    Movie loadSingleMovies(int movieID);
+    LiveData<Movie> loadSingleMovies(int movieID);
 
     @Insert(onConflict = OnConflictStrategy.IGNORE)
     void insertMovie(Movie movie);

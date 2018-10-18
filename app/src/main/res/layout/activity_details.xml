@@ -58,6 +58,7 @@
         app:layout_behavior="@string/appbar_scrolling_view_behavior"
         android:clipToPadding="false"
         android:nestedScrollingEnabled="true"
+        android:layout_marginBottom="?android:actionBarSize"
         android:layout_marginStart="130dp">
         <com.google.android.material.tabs.TabLayout
             android:id="@+id/pager_tabs"
@@ -80,6 +81,7 @@
             app:layout_constraintTop_toBottomOf="@id/pager_tabs"
             app:layout_constraintLeft_toLeftOf="parent"
             app:layout_constraintRight_toRightOf="parent"
+            android:layout_marginBottom="?android:actionBarSize"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"/>
     </androidx.constraintlayout.widget.ConstraintLayout>

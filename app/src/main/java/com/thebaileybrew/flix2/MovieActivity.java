@@ -54,23 +54,18 @@ public class MovieActivity extends AppCompatActivity implements MovieAdapter.Mov
 
 
     private final static String MOVIE_KEY = "parcel_movie";
-    private Parcelable recyclerState;
-    private final static String RECYCLER_STATE = "recycler_state";
     private final static String RECYCLER_POSITION = "recycler_position";
-    private final static String RECYCLER_PREFS_POSITION = "prefs_position";
-    private final static String RECYCLER_LIST = "recycler_items";
-
-    private enum LayoutManagerType { GRID_LAYOUT_MANAGER }
-    protected LayoutManagerType mCurrentManager;
+    private final static String RECYCLER_STATE = "recycler_state";
 
     private SharedPreferences sharedPrefs;
     private SharedPreferences.Editor prefsEditor;
+    int recyclerPosition;
+    Parcelable recyclerState;
 
     private String queryResult = "";
     private String sorting, language, filterYear;
 
     private RecyclerView mRecyclerView;
-    private int mScrollPosition;
     private List<Movie> movies = new ArrayList<>();
     private ConstraintLayout noNetworkLayout;
     private GridLayoutManager gridLayoutManager;
@@ -80,8 +75,7 @@ public class MovieActivity extends AppCompatActivity implements MovieAdapter.Mov
     private TextInputEditText searchEntry;
     private boolean searchVisible = false;
 
-    private Animation animScaleDown, animFadeOut;
-    private Animation animScaleUp, animFadeIn;
+    private Animation animFadeIn, animFadeOut;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -91,6 +85,11 @@ public class MovieActivity extends AppCompatActivity implements MovieAdapter.Mov
         setSwipeRefreshListener();
         defineAnimations();
 
+        //Define Grid size/scale factor
+        int columnIndex = displayMetricsUtils.calculateGridColumn(this);
+        gridLayoutManager = new GridLayoutManager(this, columnIndex);
+
+        //Set up listener for Search Function
         searchEntry.setOnEditorActionListener(new EditText.OnEditorActionListener() {
             @Override
             public boolean onEditorAction(TextView v, int actionId, KeyEvent event) {
@@ -107,6 +106,8 @@ public class MovieActivity extends AppCompatActivity implements MovieAdapter.Mov
                         }
                         getSharedPreferences();
                         hideSearchMenu();
+                        Log.e(TAG, "onEditorAction: load Prefs 107");
+                        loadMoviesFromPrefs();
                         swipeRefresh.setRefreshing(false);
                         return true;
                     }
@@ -120,16 +121,42 @@ public class MovieActivity extends AppCompatActivity implements MovieAdapter.Mov
             //Load Movies
             noNetworkLayout.setVisibility(View.INVISIBLE);
             mRecyclerView.setVisibility(VISIBLE);
+            Log.e(TAG, "onCreate: load Prefs 122");
+
         } else {
             //Show no connection layout
             mRecyclerView.setVisibility(View.INVISIBLE);
             noNetworkLayout.setVisibility(VISIBLE);
+            getRandomNoNetworkView();
             swipeRefresh.setRefreshing(false);
         }
 
-        int columnIndex = displayMetricsUtils.calculateGridColumn(this);
-        gridLayoutManager = new GridLayoutManager(this, columnIndex);
 
+        if (savedInstanceState != null) {
+            recyclerPosition = savedInstanceState.getInt(RECYCLER_POSITION);
+            recyclerState = savedInstanceState.getParcelable(RECYCLER_STATE);
+
+        }
+    }
+
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        Log.e(TAG, "onResume: load Prefs 147");
+        loadMoviesFromPrefs();
+    }
+
+    @Override
+    public void onSaveInstanceState(Bundle outState) {
+        super.onSaveInstanceState(outState);
+        outState.putInt(RECYCLER_POSITION, gridLayoutManager.findFirstCompletelyVisibleItemPosition());
+        recyclerState = gridLayoutManager.onSaveInstanceState();
+        outState.putParcelable(RECYCLER_STATE, recyclerState);
     }
 
     //Sets up the listener for the SwipeRefreshLayout
@@ -141,6 +168,7 @@ public class MovieActivity extends AppCompatActivity implements MovieAdapter.Mov
                     //Load Movies
                     noNetworkLayout.setVisibility(View.INVISIBLE);
                     mRecyclerView.setVisibility(VISIBLE);
+                    Log.e(TAG, "onRefresh: load Prefs 167");
                     loadMoviesFromPrefs();
                 } else {
                     //Show no connection layout
@@ -239,7 +267,7 @@ public class MovieActivity extends AppCompatActivity implements MovieAdapter.Mov
             buildRecycler(sorting, language, filterYear);
         }
     }
-
+    //Collect SharedPrefs from Activity
     private void getSharedPreferences() {
         sharedPrefs = PreferenceManager.getDefaultSharedPreferences(FlixApplication.getContext());
         //Get the sorting method from shared prefs
@@ -312,14 +340,25 @@ public class MovieActivity extends AppCompatActivity implements MovieAdapter.Mov
     //Loads the recyclerview with data from json pull with shared preferences determining return
     private void buildRecycler(String sorting, String language, String filterYear) {
         Log.e(TAG, "buildRecycler: null state: TRUE");
+        Log.e(TAG, "buildRecycler: scroll position: " + recyclerPosition);
+
         MovieAdapter adapter = new MovieAdapter(this, movies, this);
         MovieLoader movieLoader = new MovieLoader(adapter);
         movieLoader.execute(sorting, language, filterYear, queryResult);
-        mRecyclerView.setLayoutManager(gridLayoutManager);
         //Run Async to get new movies for/from DB
-        mRecyclerView.setHasFixedSize(true);
+        mRecyclerView.setLayoutManager(gridLayoutManager);
+        mRecyclerView.setHasFixedSize(false);
         mRecyclerView.setAdapter(adapter);
+        if (recyclerPosition < 0) {
+            Log.e(TAG, "buildRecycler: scroll to zero");
+            mRecyclerView.smoothScrollToPosition(0);
+        } else {
+            Log.e(TAG, "buildRecycler: scroll to position");
+            mRecyclerView.smoothScrollToPosition(recyclerPosition);
+        }
+
         swipeRefresh.setRefreshing(false);
+
     }
 
     //Loads the recycler view with data from the database without looking at other shared preferences
@@ -329,11 +368,7 @@ public class MovieActivity extends AppCompatActivity implements MovieAdapter.Mov
         mRecyclerView.setHasFixedSize(true);
         mRecyclerView.setAdapter(mAdapter);
         swipeRefresh.setRefreshing(false);
-    }
-
-    @Override
-    public void onDestroy() {
-        super.onDestroy();
+        mRecyclerView.scrollToPosition(recyclerPosition);
     }
 
     //Create Menu options
@@ -386,9 +421,7 @@ public class MovieActivity extends AppCompatActivity implements MovieAdapter.Mov
 
     //Declares the Animations used in this activity
     private void defineAnimations() {
-        animScaleDown = AnimationUtils.loadAnimation(this, R.anim.anim_scale);
         animFadeOut = AnimationUtils.loadAnimation(this, R.anim.anim_fade_out_scale);
-        animScaleUp = AnimationUtils.loadAnimation(this, R.anim.anim_scale_up);
         animFadeIn = AnimationUtils.loadAnimation(this, R.anim.anim_fade_in_scale);
     }
 
@@ -474,8 +507,11 @@ public class MovieActivity extends AppCompatActivity implements MovieAdapter.Mov
     //Removes movie from all lists
     private void removeFromAllLists(Movie movie) {
         updateDatabase(0, movie);
+        Log.e(TAG, "removeFromAllLists: load Prefs 497");
+        loadMoviesFromPrefs();
     }
 
+    //Functions to update the database record for adding/removing from WTW / FAV lists
     private void updateDatabase(final int update, final Movie movie) {
         class UpdateMovieRecord extends AsyncTask<Void, Void, Movie> {
             @Override
@@ -493,7 +529,6 @@ public class MovieActivity extends AppCompatActivity implements MovieAdapter.Mov
         }
         UpdateMovieRecord umr = new UpdateMovieRecord();
         umr.execute();
+
     }
-
-
 }

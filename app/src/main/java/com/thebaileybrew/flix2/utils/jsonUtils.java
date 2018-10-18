@@ -409,8 +409,10 @@ public class jsonUtils {
             if (TextUtils.isEmpty(String.valueOf(videosList))) {
                 return null;
             }
-            if (videosList.length() < 10) {
-                for (int c = 0; c < 2; c++) {
+            if (videosList.length() == 0) {
+                Log.e(TAG, "extractVideosDetails: length=0 no videos to extract");
+            } else if (videosList.length() > 10) {
+                for (int c = 0; c < 10; c++) {
                     JSONObject currentVideo = videosList.getJSONObject(c);
                     videoID = currentVideo.getString(VIDEO_ID);
                     videoName = currentVideo.getString(VIDEO_NAME);
@@ -502,8 +504,10 @@ public class jsonUtils {
             if (TextUtils.isEmpty(String.valueOf(reviewList))) {
                 return null;
             }
-            if (reviewList.length() < 10) {
-                for (int c = 0; c < 2; c++) {
+             if (reviewList.length() == 0) {
+                 Log.e(TAG, "extractReviewDetails: length = 0 no reviews to extract");
+             } else if (reviewList.length() > 10) {
+                for (int c = 0; c < 10; c++) {
                     JSONObject currentReview = reviewList.getJSONObject(c);
                     reviewID = currentReview.getString(REVIEW_ID);
                     reviewContent = currentReview.getString(REVIEW_CONTENT);

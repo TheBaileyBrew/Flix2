@@ -49,7 +49,7 @@ public class CreditsAdapter extends RecyclerView.Adapter<CreditsAdapter.ViewHold
     public void onBindViewHolder(ViewHolder holder, int position) {
         final Credit currentCredit = creditList.get(position);
         holder.updateItem(position);
-        holder.setIsRecyclable(true);
+        holder.setIsRecyclable(false);
         holder.expandableLayout.setExpanded(false);
         holder.expandableLayout.setVisibility(View.INVISIBLE);
         holder.characterName.setText(currentCredit.getCreditCharacterName());

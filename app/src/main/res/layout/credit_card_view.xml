@@ -52,7 +52,7 @@
                 app:el_expanded="true"
                 app:el_parallax="0.5">
                 <RelativeLayout
-                    android:layout_width="150dp"
+                    android:layout_width="match_parent"
                     android:layout_height="match_parent"
                     android:orientation="vertical"
                     android:elevation="8dp"
