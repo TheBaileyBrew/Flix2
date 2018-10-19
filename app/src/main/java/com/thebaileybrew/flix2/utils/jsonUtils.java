@@ -6,6 +6,7 @@ import android.util.Log;
 
 import com.thebaileybrew.flix2.FlixApplication;
 import com.thebaileybrew.flix2.database.DatabaseClient;
+import com.thebaileybrew.flix2.database.PopulateDatabase;
 import com.thebaileybrew.flix2.models.Credit;
 import com.thebaileybrew.flix2.models.Film;
 import com.thebaileybrew.flix2.models.Movie;
@@ -162,7 +163,7 @@ public class jsonUtils {
                 movie.setMovieOverview(movieOverview);
                 movie.setMovieReleaseDate(movieReleaseDate);
                 movieCollection.add(movie);
-                loadMovieDetail(movie);
+                new PopulateDatabase(movie);
                 
             }
 
@@ -170,31 +171,6 @@ public class jsonUtils {
             Log.e(TAG, "extractMoviesFromJson: problems extracting film details from json", je);
         }
         return movieCollection;
-    }
-    //Create the Async to load movie details into the database
-    private static void loadMovieDetail(final Movie movie) {
-
-
-        class loadDatabase extends AsyncTask<Void, Void, Void> {
-
-            @Override
-            protected Void doInBackground(Void... voids) {
-
-
-                //Add the movie to the Database
-                DatabaseClient.getInstance(FlixApplication.getContext()).getAppDatabase()
-                        .movieDao().insertMovie(movie);
-                return null;
-            }
-
-            @Override
-            protected void onPostExecute(Void v) {
-                super.onPostExecute(v);
-
-            }
-        }
-        loadDatabase ldb = new loadDatabase();
-        ldb.execute();
     }
 
     //Get Single Movie Detail Extra Data

@@ -14,17 +14,18 @@ import androidx.room.Update;
 
 @Dao
 public interface MovieDao {
-    @Query("SELECT * FROM allmovies WHERE favorite = :favValue ORDER BY movie_id")
-    LiveData<List<Movie>> loadAllMovies(int favValue);
+
+    @Query("SELECT * FROM allmovies ORDER BY movie_id")
+    LiveData<List<Movie>> loadMovies();
+
+    @Query("SELECT * FROM allmovies WHERE favorite = :favoriteValue ORDER BY movie_id")
+    List<Movie> loadFavorites(int favoriteValue);
 
     @Query("SELECT * FROM allmovies WHERE movie_id = :movieID")
-    LiveData<Movie> loadSingleMovies(int movieID);
+    Movie loadSingleMovies(int movieID);
 
     @Insert(onConflict = OnConflictStrategy.IGNORE)
     void insertMovie(Movie movie);
-
-    @Insert
-    void insertAllMovies(Movie... movie);
 
     @Update(onConflict = OnConflictStrategy.REPLACE)
     void updateMovie(Movie movie);

@@ -6,10 +6,7 @@ import android.graphics.Color;
 import android.graphics.PorterDuff;
 import android.os.AsyncTask;
 import android.os.Bundle;
-import android.os.Parcelable;
-import android.telecom.Call;
 import android.util.Log;
-import android.util.TypedValue;
 import android.view.View;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
@@ -23,27 +20,23 @@ import com.google.android.material.appbar.AppBarLayout;
 import com.google.android.material.tabs.TabLayout;
 import com.squareup.picasso.Picasso;
 import com.thebaileybrew.flix2.database.DatabaseClient;
+import com.thebaileybrew.flix2.database.MovieRepository;
+import com.thebaileybrew.flix2.database.viewmodels.MainViewModel;
 import com.thebaileybrew.flix2.interfaces.adapters.CollapsingToolbarListener;
-import com.thebaileybrew.flix2.interfaces.adapters.CreditsAdapter;
 import com.thebaileybrew.flix2.interfaces.adapters.DetailFragmentAdapter;
 import com.thebaileybrew.flix2.interfaces.adapters.StaticProgressBar;
-import com.thebaileybrew.flix2.loaders.CreditsLoader;
 import com.thebaileybrew.flix2.loaders.MovieRuntimeLoader;
-import com.thebaileybrew.flix2.loaders.SingleMovieLoader;
-import com.thebaileybrew.flix2.models.Credit;
-import com.thebaileybrew.flix2.models.Film;
 import com.thebaileybrew.flix2.models.Movie;
 import com.thebaileybrew.flix2.utils.UrlUtils;
 import com.thebaileybrew.flix2.utils.networkUtils;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 import java.util.concurrent.ExecutionException;
 
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.recyclerview.widget.LinearLayoutManager;
-import androidx.recyclerview.widget.RecyclerView;
+import androidx.lifecycle.Observer;
+import androidx.lifecycle.ViewModelProviders;
 import androidx.viewpager.widget.ViewPager;
 
 import static android.view.View.INVISIBLE;
@@ -56,6 +49,7 @@ public class DetailsActivity extends AppCompatActivity implements View.OnClickLi
     private final static String TIME_FORMAT = "%02d:%02d";
 
     private androidx.appcompat.widget.Toolbar mToolbar;
+    MainViewModel movieViewModel;
     private ImageView posterImage;
     private ImageView poster;
     private LinearLayout movieDetailsLayout;
@@ -79,6 +73,7 @@ public class DetailsActivity extends AppCompatActivity implements View.OnClickLi
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_details);
+        movieViewModel = ViewModelProviders.of(this).get(MainViewModel.class);
         landscapeMode = getResources().getDisplayMetrics().widthPixels > getResources().getDisplayMetrics().heightPixels;
         Log.e(TAG, "onCreate: widthpx: " + getResources().getDisplayMetrics().widthPixels);
         Log.e(TAG, "onCreate: heightpx: " + getResources().getDisplayMetrics().heightPixels);
@@ -367,19 +362,19 @@ public class DetailsActivity extends AppCompatActivity implements View.OnClickLi
                     //MARK AS NOT FAVORITE
                     isFavorite = false; //0
                     updateValue = 0;
-                    updateDatabase(updateValue);
+                    movieViewModel.update(movie, updateValue);
                     movieFavorite.setImageResource(R.drawable.ic_star);
                 } else {
                     //MARK AS NEW FAVORITE
                     isFavorite = true; //1
                     updateValue = 1;
-                    updateDatabase(updateValue);
+                    movieViewModel.update(movie, updateValue);
                     movieFavorite.setImageResource(R.drawable.ic_star_border);
                     if (isInterested) {
                         //REMOVE FROM INTERESTED
                         isInterested = false; //0
-
-                        updateDatabase(updateValue);
+                        updateValue = 0;
+                        movieViewModel.update(movie, updateValue);
                         movieToWatch.setImageResource(R.drawable.ic_star);
                     }
                 }
@@ -390,18 +385,19 @@ public class DetailsActivity extends AppCompatActivity implements View.OnClickLi
                     //MARK AS NOT INTERESTED
                     isInterested = false; //0
                     updateValue = 0;
-                    updateDatabase(updateValue);
+                    movieViewModel.update(movie, updateValue);
                     movieToWatch.setImageResource(R.drawable.ic_star);
                 } else {
                     //MARK AS NEW INTERESTED
                     isInterested = true; //2
                     updateValue = 2;
-                    updateDatabase(updateValue);
+                    movieViewModel.update(movie, updateValue);
                     movieToWatch.setImageResource(R.drawable.ic_star_interested);
                     if (isFavorite) {
                         //REMOVE FROM FAVORITES
                         isFavorite = false; //0
-                        updateDatabase(updateValue);
+                        updateValue = 0;
+                        movieViewModel.update(movie, updateValue);
                         movieFavorite.setImageResource(R.drawable.ic_star);
                     }
                 }
@@ -411,24 +407,6 @@ public class DetailsActivity extends AppCompatActivity implements View.OnClickLi
         }
     }
 
-    private void updateDatabase(final int update) {
-        class UpdateMovieRecord extends AsyncTask<Void, Void, Movie> {
-            @Override
-            protected Movie doInBackground(Void... voids) {
-                movie.setMovieFavorite(update);
-                DatabaseClient.getInstance(FlixApplication.getContext()).getAppDatabase()
-                        .movieDao().updateMovie(movie);
-                return null;
-            }
-
-            @Override
-            protected void onPostExecute(Movie movie) {
-                super.onPostExecute(movie);
-            }
-        }
-        UpdateMovieRecord umr = new UpdateMovieRecord();
-        umr.execute();
-    }
 
     public static Movie getSelected() {
         return movie;

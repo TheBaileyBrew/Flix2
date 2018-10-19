@@ -16,12 +16,8 @@ import java.util.List;
 public class MovieLoader extends AsyncTask<String, Void, List<Movie>> {
     private static final String TAG = MovieLoader.class.getSimpleName();
 
-    private final MovieAdapter mMovieAdapter;
-
-    public MovieLoader(MovieAdapter movieAdapter) {
-        mMovieAdapter = movieAdapter;
+    public MovieLoader() {
     }
-
 
     @Override
     protected List<Movie> doInBackground(String... strings) {
@@ -52,9 +48,6 @@ public class MovieLoader extends AsyncTask<String, Void, List<Movie>> {
 
     @Override
     protected void onPostExecute(List<Movie> movies) {
-        if(movies != null) {
-            mMovieAdapter.setMovieCollection(movies);
-        }
 
         super.onPostExecute(movies);
 
