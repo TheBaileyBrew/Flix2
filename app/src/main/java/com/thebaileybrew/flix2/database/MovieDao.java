@@ -10,25 +10,18 @@ import androidx.room.Delete;
 import androidx.room.Insert;
 import androidx.room.OnConflictStrategy;
 import androidx.room.Query;
-import androidx.room.Update;
 
 @Dao
 public interface MovieDao {
 
-    @Query("SELECT * FROM allmovies ORDER BY movie_id")
-    LiveData<List<Movie>> loadMovies();
-
-    @Query("SELECT * FROM allmovies WHERE favorite = :favoriteValue ORDER BY movie_id")
-    List<Movie> loadFavorites(int favoriteValue);
+    @Query("SELECT * FROM allmovies ORDER BY movie_title")
+    LiveData<List<Movie>> getFavorites();
 
     @Query("SELECT * FROM allmovies WHERE movie_id = :movieID")
-    Movie loadSingleMovies(int movieID);
+    Movie getMovieDetails(int movieID);
 
-    @Insert(onConflict = OnConflictStrategy.IGNORE)
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
     void insertMovie(Movie movie);
-
-    @Update(onConflict = OnConflictStrategy.REPLACE)
-    void updateMovie(Movie movie);
 
     @Delete
     void deleteMovie(Movie movie);

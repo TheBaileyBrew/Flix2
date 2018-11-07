@@ -1,4 +1,4 @@
-package com.thebaileybrew.flix2.interfaces.adapters;
+package com.thebaileybrew.flix2.utils.objects;
 
 import android.content.Context;
 import android.content.res.TypedArray;

@@ -2,74 +2,101 @@ package com.thebaileybrew.flix2.database;
 
 import android.app.Application;
 import android.os.AsyncTask;
+import android.util.Log;
 
-import com.thebaileybrew.flix2.FlixApplication;
 import com.thebaileybrew.flix2.models.Movie;
 
 import java.util.List;
+import java.util.concurrent.ExecutionException;
 
 import androidx.lifecycle.LiveData;
 
 public class MovieRepository {
+    private static final String TAG = MovieRepository.class.getSimpleName();
 
-    private MovieDao movieDao;
-    private static int movieFavorite;
-    private LiveData<List<Movie>> mAllMovies;
+    private MovieDao mMovieDao;
+    private LiveData<List<Movie>> mFavorites;
 
-    public MovieRepository() {
-        AppDatabase aDb = DatabaseClient.getInstance(FlixApplication.getContext()).getAppDatabase();
-        movieDao = aDb.movieDao();
-        mAllMovies = movieDao.loadMovies();
-
+    public MovieRepository(Application application) {
+        MovieDatabase db = MovieDatabase.getDatabase(application);
+        mMovieDao = db.movieDao();
     }
 
-
-    public LiveData<List<Movie>> getAllMovies() {
-        return mAllMovies;
+    public LiveData<List<Movie>> getFavorites() {
+        mFavorites = mMovieDao.getFavorites();
+        return mFavorites;
     }
 
-    public void insertMovie (Movie movie) {
-        new insertAsyncTask(movieDao).execute(movie);
-    }
-
-    public void updateMovie (Movie movie, int favorite) {
-        movieFavorite = favorite;
-        new updateAsyncTask(movieDao).execute(movie);
-    }
-
-    private static class insertAsyncTask extends AsyncTask<Movie, Void, Void> {
-
-        private MovieDao mInsertMovieDao;
-
-        insertAsyncTask(MovieDao dao) {
-            mInsertMovieDao = dao;
-        }
-
-        @Override
-        protected Void doInBackground(final Movie... params) {
-            mInsertMovieDao.insertMovie(params[0]);
+    public Movie getSingleFilm(int id) {
+        try {
+            return new checkForDatabaseRecordAsyncTask(mMovieDao).execute(id).get();
+        } catch (ExecutionException e) {
+            e.printStackTrace();
+            return null;
+        } catch (InterruptedException e) {
+            Log.e(TAG, "getSingleFilm: ", e);;
             return null;
         }
     }
 
-    private static class updateAsyncTask extends AsyncTask<Movie, Void, Void> {
+    public void insertFavorite(Movie movie) {
+        new populateDatabaseFavoriteAsyncTask(mMovieDao).execute(movie);
+    }
 
-        private MovieDao mUpdateMovieDao;
+    public void removeFavorite(Movie movie) {
+        new removeDatabaseFavoriteAsyncTask(mMovieDao).execute(movie);
+    }
 
-        updateAsyncTask(MovieDao dao) {
-            mUpdateMovieDao = dao;
+
+    //Add to Favorite
+    private static class populateDatabaseFavoriteAsyncTask extends AsyncTask<Movie, Void, Void> {
+        private MovieDao mMovieDao;
+
+        populateDatabaseFavoriteAsyncTask(MovieDao mMovieDao) {
+            this.mMovieDao = mMovieDao;
         }
 
+
         @Override
-        protected Void doInBackground(final Movie ... params) {
-            Movie movie = params[0];
-            movie.setMovieFavorite(movieFavorite);
-            mUpdateMovieDao.updateMovie(movie);
+        protected Void doInBackground(Movie... movies) {
+            Movie currentMovie = movies[0];
+            mMovieDao.insertMovie(currentMovie);
             return null;
         }
     }
 
+    //Remove Favorite
+    private static class removeDatabaseFavoriteAsyncTask extends AsyncTask<Movie, Void, Void> {
+        private MovieDao mMovieDao;
+
+        removeDatabaseFavoriteAsyncTask(MovieDao mMovieDao) {
+            this.mMovieDao = mMovieDao;
+        }
 
 
+        @Override
+        protected Void doInBackground(Movie... movies) {
+            Movie currentMovie = movies[0];
+            Log.e(TAG, "doInBackground: movie to delete is: " + currentMovie.getMovieTitle() );
+            mMovieDao.deleteMovie(currentMovie);
+            Log.e(TAG, "doInBackground: movie deleted");
+            return null;
+        }
+    }
+
+    private static class checkForDatabaseRecordAsyncTask extends AsyncTask<Integer, Void, Movie> {
+        private MovieDao mMovieDao;
+
+        checkForDatabaseRecordAsyncTask(MovieDao movieDao) {
+            this.mMovieDao = movieDao;
+        }
+
+        @Override
+        protected Movie doInBackground(Integer... ints) {
+            int currentInt = ints[0];
+            mMovieDao.getMovieDetails(currentInt);
+            return mMovieDao.getMovieDetails(currentInt);
+        }
+    }
 
 }

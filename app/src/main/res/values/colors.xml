@@ -7,6 +7,7 @@
     <color name="colorPrimaryDark">#424242</color>
     <color name="colorWhiteFade">#50ffffff</color>
     <color name="colorAccent">#757575</color>
+    <color name="colorAccentFade">#50808080</color>
     <color name="colorWhite">#fefefe</color>
     <color name="colorWhiteWash">#80757575</color>
 

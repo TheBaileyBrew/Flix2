@@ -4,39 +4,36 @@ import android.animation.ObjectAnimator;
 import android.content.Intent;
 import android.graphics.Color;
 import android.graphics.PorterDuff;
-import android.os.AsyncTask;
 import android.os.Bundle;
+import android.os.Parcelable;
 import android.util.Log;
+import android.view.Gravity;
 import android.view.View;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
 import android.view.animation.OvershootInterpolator;
-import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.google.android.material.appbar.AppBarLayout;
+import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.tabs.TabLayout;
 import com.squareup.picasso.Picasso;
-import com.thebaileybrew.flix2.database.DatabaseClient;
 import com.thebaileybrew.flix2.database.MovieRepository;
-import com.thebaileybrew.flix2.database.viewmodels.MainViewModel;
 import com.thebaileybrew.flix2.interfaces.adapters.CollapsingToolbarListener;
 import com.thebaileybrew.flix2.interfaces.adapters.DetailFragmentAdapter;
-import com.thebaileybrew.flix2.interfaces.adapters.StaticProgressBar;
+import com.thebaileybrew.flix2.utils.objects.StaticProgressBar;
 import com.thebaileybrew.flix2.loaders.MovieRuntimeLoader;
 import com.thebaileybrew.flix2.models.Movie;
 import com.thebaileybrew.flix2.utils.UrlUtils;
 import com.thebaileybrew.flix2.utils.networkUtils;
 
-import java.util.List;
 import java.util.Locale;
-import java.util.concurrent.ExecutionException;
 
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.lifecycle.Observer;
-import androidx.lifecycle.ViewModelProviders;
+import androidx.appcompat.widget.AppCompatImageView;
 import androidx.viewpager.widget.ViewPager;
 
 import static android.view.View.INVISIBLE;
@@ -49,9 +46,8 @@ public class DetailsActivity extends AppCompatActivity implements View.OnClickLi
     private final static String TIME_FORMAT = "%02d:%02d";
 
     private androidx.appcompat.widget.Toolbar mToolbar;
-    MainViewModel movieViewModel;
     private ImageView posterImage;
-    private ImageView poster;
+    private AppCompatImageView poster;
     private LinearLayout movieDetailsLayout;
     private TextView movieRuntime;
     private TextView movieRelease;
@@ -63,17 +59,19 @@ public class DetailsActivity extends AppCompatActivity implements View.OnClickLi
     private View scrimView;
     private boolean landscapeMode;
     private boolean isFavorite;
-    private boolean isInterested;
-    private ImageButton movieFavorite;
-    private ImageButton movieToWatch;
+    private boolean firstload = true;
+    private FloatingActionButton movieFavorite;
     private static Movie movie;
     private ViewPager viewPager;
+    MovieRepository movieRepo;
+    Movie thisMovie;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_details);
-        movieViewModel = ViewModelProviders.of(this).get(MainViewModel.class);
+        movieRepo = new MovieRepository(getApplication());
+
         landscapeMode = getResources().getDisplayMetrics().widthPixels > getResources().getDisplayMetrics().heightPixels;
         Log.e(TAG, "onCreate: widthpx: " + getResources().getDisplayMetrics().widthPixels);
         Log.e(TAG, "onCreate: heightpx: " + getResources().getDisplayMetrics().heightPixels);
@@ -93,24 +91,16 @@ public class DetailsActivity extends AppCompatActivity implements View.OnClickLi
         //Check for Parcelable data pass
         if (getMovieIntent != null) {
             if (getMovieIntent.hasExtra(MOVIE_KEY)) {
-                int movieID = getMovieIntent.getIntExtra(MOVIE_KEY, 0);
-                try {
-                    getMovieDetails(movieID);
-                } catch (ExecutionException ee) {
-                    Log.e(TAG, "onCreate: execution exemption", ee);
-                } catch (InterruptedException ie) {
-                    ie.printStackTrace();
-                }
-                try {
-                    Thread.sleep(100);
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
+                movie = getMovieIntent.getParcelableExtra(MOVIE_KEY);
+                if (checkForDatabaseRecord(movie.getMovieID())) {
+                    movie = thisMovie;
                 }
                 getSupportActionBar().setTitle(movie.getMovieTitle());
                 getSupportActionBar().getThemedContext();
                 populateUI(movie);
                 currentFilmRating = movie.getMovieVoteAverage();
-                //Setup the ViewPager
+                setFAB();
+                Log.e(TAG, "onCreate: movie is favorite" + movie.getMovieFavorite() );
 
             }
         }
@@ -121,49 +111,45 @@ public class DetailsActivity extends AppCompatActivity implements View.OnClickLi
         appBarLayout.addOnOffsetChangedListener(new CollapsingToolbarListener() {
             @Override
             public void onStateChanged(AppBarLayout appBarLayout, State state) {
-                Log.d(TAG, "onStateChanged: Current State: " + state.name());
                 switch (state) {
+                    case EXPANDED:
+                        if (poster.getVisibility() != View.VISIBLE) {
+                            poster.startAnimation(animFadeIn);
+                            poster.setVisibility(VISIBLE);
+                            hideRatingBar();
+                        }
+                        scrimView.setBackgroundResource(R.drawable.shape_scrim);
+                        break;
                     case COLLAPSED:
-                        hidePosterImage();
-                        showRatingBar();
-                        updateRatingBar(currentFilmRating);
-                        posterHidden = true;
+                        if (poster.getVisibility() == View.VISIBLE) {
+                            poster.startAnimation(animFadeOut);
+                            poster.setVisibility(View.INVISIBLE);
+                            showRatingBar();
+                            updateRatingBar(currentFilmRating);
+                        }
                         scrimView.setBackgroundResource(R.drawable.shape_scrim_collapsed);
                         break;
-                    case EXPANDED:
-                        showPosterImage();
-                        hideRatingBar();
-                        scrimView.setBackgroundResource(R.drawable.shape_scrim);
-                        posterHidden = false;
-                        break;
-                    default:
-                        scrimView.setBackgroundResource(R.drawable.shape_scrim);
+                    case IDLE:
+                        scrimView.setBackgroundResource(R.drawable.shape_scrim_collapsed);
                         break;
                 }
             }
         });
-        viewPager.getAdapter().notifyDataSetChanged();
 
+        viewPager.getAdapter().notifyDataSetChanged();
     }
 
-    private void getMovieDetails(final int movieID) throws ExecutionException, InterruptedException {
-        class getMovieSingle extends AsyncTask<Void, Void, Movie> {
-
-            @Override
-            protected Movie doInBackground(Void... voids) {
-                return DatabaseClient.getInstance(FlixApplication.getContext()).getAppDatabase()
-                        .movieDao().loadSingleMovies(movieID);
-            }
-
-            @Override
-            protected void onPostExecute(Movie thismovie) {
-                super.onPostExecute(thismovie);
-                Log.e(TAG, "onPostExecute: movie grabbed = " + movie.getMovieTitle() );
-                movie = thismovie;
-            }
+    private void setFAB() {
+        int fav = movie.getMovieFavorite();
+        switch (fav) {
+            case 0:
+            default:
+                movieFavorite.setImageResource(R.drawable.ic_star);
+                break;
+            case 1:
+                movieFavorite.setImageResource(R.drawable.ic_star_border);
+                break;
         }
-        getMovieSingle gms = new getMovieSingle();
-        movie = gms.execute().get();
     }
 
     //Method for declaring the Animation Effects that can happen to objects in any viewstate
@@ -226,11 +212,7 @@ public class DetailsActivity extends AppCompatActivity implements View.OnClickLi
 
     }
 
-    //Method to show the poster image overlapping the collapsing toolbar
-    private void showPosterImage() {
-        poster.startAnimation(animScaleUp);
-        poster.setVisibility(VISIBLE);
-    }
+
     //Method to hide the StaticProgressBar (behind the poster image) when poster is revealed
     private void hideRatingBar() {
         movieRatingBar.startAnimation(animFadeOut);
@@ -240,11 +222,6 @@ public class DetailsActivity extends AppCompatActivity implements View.OnClickLi
         }
     }
 
-    //Method to hide the poster image overlapping the collapsing toolbar
-    private void hidePosterImage() {
-        poster.startAnimation(animScaleDown);
-        poster.setVisibility(INVISIBLE);
-    }
     //Method to show the StaticProgressBar (behind the poster) when the poster is hidden
     private void showRatingBar() {
         movieRatingBar.startAnimation(animFadeIn);
@@ -271,7 +248,6 @@ public class DetailsActivity extends AppCompatActivity implements View.OnClickLi
     //Populate the UI with the details pulled from Async task and Parcelable
     private void populateUI(final Movie movie) {
         movieFavorite.setOnClickListener(this);
-        movieToWatch.setOnClickListener(this);
         //Check for Network Connectivity
         if (networkUtils.checkNetwork(DetailsActivity.this)) {
             //GET MOVIE RUNTIME FROM API QUERY
@@ -292,22 +268,12 @@ public class DetailsActivity extends AppCompatActivity implements View.OnClickLi
         switch (currentStar) {
             case 1: //MOVIE IS FAVORITE
                 movieFavorite.setImageResource(R.drawable.ic_star_border);
-                movieToWatch.setImageResource(R.drawable.ic_star);
                 isFavorite = true;
-                isInterested = false;
-                break;
-            case 2: //MOVIE IS INTERESTED
-                movieFavorite.setImageResource(R.drawable.ic_star);
-                movieToWatch.setImageResource(R.drawable.ic_star_interested);
-                isFavorite = false;
-                isInterested = true;
                 break;
             case 0: //MOVIE IS NOT FAVORITE nor INTERESTED
             default:
                 movieFavorite.setImageResource(R.drawable.ic_star);
-                movieToWatch.setImageResource(R.drawable.ic_star);
                 isFavorite = false;
-                isInterested = false;
                 break;
         }
     }
@@ -347,8 +313,7 @@ public class DetailsActivity extends AppCompatActivity implements View.OnClickLi
         movieRuntime = findViewById(R.id.movie_runtime);
         movieRelease = findViewById(R.id.movie_release);
         movieRatingBar = findViewById(R.id.progress);
-        movieFavorite = findViewById(R.id.favorite_button);
-        movieToWatch = findViewById(R.id.interested_button);
+        movieFavorite = findViewById(R.id.floating_favorite_button);
 
     }
 
@@ -356,50 +321,24 @@ public class DetailsActivity extends AppCompatActivity implements View.OnClickLi
     public void onClick(View v) {
         int updateValue;
         switch (v.getId()) {
-            case R.id.favorite_button:
+            case R.id.floating_favorite_button:
                 //TODO update db entry
                 if (isFavorite) {
                     //MARK AS NOT FAVORITE
                     isFavorite = false; //0
                     updateValue = 0;
-                    movieViewModel.update(movie, updateValue);
-                    movieFavorite.setImageResource(R.drawable.ic_star);
+                    movie.setMovieFavorite(updateValue);
+                    movieFavorite.setImageDrawable(getDrawable(R.drawable.ic_star));
+                    updateMovieDatabase(movie);
+                    showToastMessageFavoriteModification(updateValue);
                 } else {
                     //MARK AS NEW FAVORITE
                     isFavorite = true; //1
                     updateValue = 1;
-                    movieViewModel.update(movie, updateValue);
-                    movieFavorite.setImageResource(R.drawable.ic_star_border);
-                    if (isInterested) {
-                        //REMOVE FROM INTERESTED
-                        isInterested = false; //0
-                        updateValue = 0;
-                        movieViewModel.update(movie, updateValue);
-                        movieToWatch.setImageResource(R.drawable.ic_star);
-                    }
-                }
-                break;
-            case R.id.interested_button:
-                //TODO update db entry
-                if (isInterested) {
-                    //MARK AS NOT INTERESTED
-                    isInterested = false; //0
-                    updateValue = 0;
-                    movieViewModel.update(movie, updateValue);
-                    movieToWatch.setImageResource(R.drawable.ic_star);
-                } else {
-                    //MARK AS NEW INTERESTED
-                    isInterested = true; //2
-                    updateValue = 2;
-                    movieViewModel.update(movie, updateValue);
-                    movieToWatch.setImageResource(R.drawable.ic_star_interested);
-                    if (isFavorite) {
-                        //REMOVE FROM FAVORITES
-                        isFavorite = false; //0
-                        updateValue = 0;
-                        movieViewModel.update(movie, updateValue);
-                        movieFavorite.setImageResource(R.drawable.ic_star);
-                    }
+                    movie.setMovieFavorite(updateValue);
+                    movieFavorite.setImageDrawable(getDrawable(R.drawable.ic_star_border));
+                    updateMovieDatabase(movie);
+                    showToastMessageFavoriteModification(updateValue);
                 }
                 break;
             default:
@@ -407,6 +346,51 @@ public class DetailsActivity extends AppCompatActivity implements View.OnClickLi
         }
     }
 
+    private boolean checkForDatabaseRecord(int movieID) {
+        thisMovie = movieRepo.getSingleFilm(movieID);
+        if (thisMovie == null) {
+            return false;
+        } else {
+            return true;
+        }
+    }
+
+    private void updateMovieDatabase(Movie movie) {
+        int favValue = movie.getMovieFavorite();
+        switch (favValue) {
+            case 0:
+                movieRepo.removeFavorite(movie);
+                break;
+            case 1:
+                movieRepo.insertFavorite(movie);
+                break;
+        }
+    }
+
+    private void showToastMessageFavoriteModification(int selection) {
+        Toast toast = Toast.makeText(FlixApplication.getContext(), movie.getMovieTitle() + " removed from Favorites", Toast.LENGTH_SHORT);
+        View view = toast.getView();
+        view.setBackgroundResource(R.drawable.custom_toast_drawable);
+        view.setAlpha((float) 0.65);
+        TextView text = view.findViewById(android.R.id.message);
+        switch (selection) {
+            case 0:
+                String removeFav = movie.getMovieTitle() + "\n" + " was removed from Favorites";
+                text.setText(removeFav);
+                text.setTextSize(22);
+                text.setGravity(Gravity.CENTER_HORIZONTAL);
+                text.setTextColor(getColor(R.color.colorPrimaryText));
+                toast.show();
+                break;
+            case 1:
+                String addFav = movie.getMovieTitle() + "\n" + " was added to Favorites";
+                text.setText(addFav);
+                text.setTextSize(22);
+                text.setGravity(Gravity.CENTER_HORIZONTAL);
+                text.setTextColor(getColor(R.color.colorPrimaryText));
+                toast.show();
+        }
+    }
 
     public static Movie getSelected() {
         return movie;

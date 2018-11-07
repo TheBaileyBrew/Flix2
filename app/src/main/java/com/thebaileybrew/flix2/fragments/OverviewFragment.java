@@ -12,7 +12,6 @@ import android.widget.TextView;
 import com.thebaileybrew.flix2.DetailsActivity;
 import com.thebaileybrew.flix2.FlixApplication;
 import com.thebaileybrew.flix2.R;
-import com.thebaileybrew.flix2.database.DatabaseClient;
 import com.thebaileybrew.flix2.loaders.SingleMovieLoader;
 import com.thebaileybrew.flix2.models.Movie;
 

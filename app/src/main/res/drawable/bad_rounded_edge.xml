@@ -6,7 +6,7 @@
         android:color="@color/colorLowFade"
         />
 
-    <corners android:radius="20dp" />
+    <corners android:radius="2dp" />
 
     <padding
         android:left="20dp"

@@ -7,17 +7,17 @@ public class CollapsingToolbarListener implements AppBarLayout.OnOffsetChangedLi
 
     public enum State { EXPANDED, COLLAPSED, IDLE}
 
-    private State mCurrentState = State.IDLE;
+    protected State mCurrentState = State.IDLE;
 
     @Override
-    public final void onOffsetChanged(AppBarLayout appBarLayout, int i) {
+    public void onOffsetChanged(AppBarLayout appBarLayout, int i) {
 
         if (i == 0) {
             if (mCurrentState != State.EXPANDED) {
                 onStateChanged(appBarLayout, State.EXPANDED);
             }
             mCurrentState = State.EXPANDED;
-        } else if (Math.abs(i) >= appBarLayout.getTotalScrollRange()) {
+        } else if (Math.abs(i) == appBarLayout.getTotalScrollRange()) {
             if (mCurrentState != State.COLLAPSED) {
                 onStateChanged(appBarLayout, State.COLLAPSED);
             }

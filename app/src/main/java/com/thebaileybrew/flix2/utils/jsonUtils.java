@@ -5,8 +5,6 @@ import android.text.TextUtils;
 import android.util.Log;
 
 import com.thebaileybrew.flix2.FlixApplication;
-import com.thebaileybrew.flix2.database.DatabaseClient;
-import com.thebaileybrew.flix2.database.PopulateDatabase;
 import com.thebaileybrew.flix2.models.Credit;
 import com.thebaileybrew.flix2.models.Film;
 import com.thebaileybrew.flix2.models.Movie;
@@ -163,7 +161,6 @@ public class jsonUtils {
                 movie.setMovieOverview(movieOverview);
                 movie.setMovieReleaseDate(movieReleaseDate);
                 movieCollection.add(movie);
-                new PopulateDatabase(movie);
                 
             }
 

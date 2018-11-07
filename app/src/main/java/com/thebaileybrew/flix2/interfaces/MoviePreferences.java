@@ -8,6 +8,7 @@ import android.preference.Preference;
 import android.preference.PreferenceFragment;
 import android.preference.PreferenceManager;
 
+import com.thebaileybrew.flix2.MovieActivity;
 import com.thebaileybrew.flix2.R;
 
 import java.text.SimpleDateFormat;
@@ -55,6 +56,7 @@ public class MoviePreferences extends AppCompatActivity {
                     sortOrder.setSummary("");
                     sortLanguage.setSummary("");
                     yearFilter.setSummary("");
+                    setQueryResults();
                     prefsEditor.clear();
                     prefsEditor.apply();
                     return false;
@@ -63,8 +65,14 @@ public class MoviePreferences extends AppCompatActivity {
 
         }
 
+        private void setQueryResults() {
+            MovieActivity ma = new MovieActivity();
+            ma.setQueryResult();
+        }
+
         @Override
         public boolean onPreferenceChange(Preference preference, Object value) {
+            setQueryResults();
             String stringValue = value.toString();
             if (stringValue.equals(String.valueOf(R.string.preference_sort_most_recent))) {
                 Preference yearFilter = findPreference("primary_release_year");

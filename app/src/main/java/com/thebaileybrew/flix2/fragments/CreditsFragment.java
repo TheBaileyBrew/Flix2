@@ -28,7 +28,7 @@ public class CreditsFragment extends Fragment {
 
     private final static String TAG = CreditsFragment.class.getSimpleName();
     private RecyclerView creditRecycler;
-    private Movie movie;
+    private static Movie movie;
     private List<Credit> credits = new ArrayList<>();
     private boolean landscapeMode;
     private int columnCount;

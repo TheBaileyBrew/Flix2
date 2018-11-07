@@ -18,14 +18,12 @@
     <string name="preference_sort_popular_label">Popular</string>
     <string name="preference_sort_top_rated_label">Top Rated</string>
     <string name="preference_sort_release_date_label">Upcoming</string>
-    <string name="preference_sort_watchlist_label">Want To Watch</string>
     <string name="preference_sort_favorites_label">Favorites</string>
     <!--  Value for Preference Sorting  -->
     <string name="preference_sort_popular" translatable="false">popularity.desc</string>
     <string name="preference_sort_top_rated" translatable="false">vote_average.desc</string>
     <string name="preference_sort_most_recent" translatable="false">release_date.desc</string>
     <string name="preference_sort_favorite" translatable="false">favorite</string>
-    <string name="preference_sort_watchlist" translatable="false">watchlist</string>
     <!--  Key name for Preference Sorting  -->
     <string name="preference_sort_key" translatable="false">sort_by</string>
 
