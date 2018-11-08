@@ -11,7 +11,7 @@ android {
         multiDexEnabled true
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
 
-        def apikey = project.hasProperty('apikey') ? apikey : (System.getenv('API_KEY') ?: "\"bc9386edce4886744345020389505c78\"")
+        def apikey = project.hasProperty('apikey') ? apikey : (System.getenv('API_KEY') ?: "\"[YOUR KEY HERE]\"")
         buildConfigField "String", "API_KEY", apikey
     }
     buildTypes {
