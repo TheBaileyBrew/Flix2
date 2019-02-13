@@ -1,7 +1,5 @@
 package com.thebaileybrew.flix2.fragments;
 
-import android.content.Intent;
-import android.os.AsyncTask;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -10,13 +8,9 @@ import android.view.ViewGroup;
 import android.widget.TextView;
 
 import com.thebaileybrew.flix2.DetailsActivity;
-import com.thebaileybrew.flix2.FlixApplication;
 import com.thebaileybrew.flix2.R;
-import com.thebaileybrew.flix2.database.DatabaseClient;
 import com.thebaileybrew.flix2.loaders.SingleMovieLoader;
 import com.thebaileybrew.flix2.models.Movie;
-
-import java.util.concurrent.ExecutionException;
 
 import androidx.fragment.app.Fragment;
 

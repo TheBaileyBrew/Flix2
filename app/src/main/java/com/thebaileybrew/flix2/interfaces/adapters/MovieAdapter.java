@@ -32,9 +32,8 @@ public class MovieAdapter extends RecyclerView.Adapter<MovieAdapter.ViewHolder> 
     }
 
     //Create the recycler
-    public MovieAdapter(Context context, List<Movie> movieCollection, MovieAdapterClickHandler clicker) {
+    public MovieAdapter(Context context, MovieAdapterClickHandler clicker) {
         this.layoutInflater = LayoutInflater.from(context);
-        this.movieCollection = movieCollection;
         this.adapterClickHandler = clicker;
     }
 
@@ -67,6 +66,10 @@ public class MovieAdapter extends RecyclerView.Adapter<MovieAdapter.ViewHolder> 
 
     public void setMovieCollection(List<Movie> movieReturn) {
         movieCollection = movieReturn;
+    }
+
+    public List<Movie> getMovieCollection() {
+        return movieCollection;
     }
 
 

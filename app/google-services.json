@@ -1,0 +1,55 @@
+{
+  "project_info": {
+    "project_number": "1006415654979",
+    "firebase_url": "https://flix2-485dc.firebaseio.com",
+    "project_id": "flix2-485dc",
+    "storage_bucket": "flix2-485dc.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1006415654979:android:00916f7ba8aa0ed4",
+        "android_client_info": {
+          "package_name": "com.thebaileybrew.flix2"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "1006415654979-5nttom3a34fm8hsreb9l3mi9452qdv2m.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.thebaileybrew.flix2",
+            "certificate_hash": "6fbda0ea65aa6c34080db7d332707e45accc9091"
+          }
+        },
+        {
+          "client_id": "1006415654979-5u6t1m7u5ci4uvivm4levt2g2ag8rbnb.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyA8OBKzQkU4oICwxw_oC1sZ2VheUzwxDNo"
+        }
+      ],
+      "services": {
+        "analytics_service": {
+          "status": 1
+        },
+        "appinvite_service": {
+          "status": 2,
+          "other_platform_oauth_client": [
+            {
+              "client_id": "1006415654979-5u6t1m7u5ci4uvivm4levt2g2ag8rbnb.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        },
+        "ads_service": {
+          "status": 2
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

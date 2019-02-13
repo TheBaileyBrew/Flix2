@@ -4,7 +4,6 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.os.AsyncTask;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.util.Log;
@@ -23,8 +22,6 @@ import android.widget.TextView;
 
 import com.google.android.material.textfield.TextInputEditText;
 import com.google.android.material.textfield.TextInputLayout;
-import com.thebaileybrew.flix2.database.DatabaseClient;
-import com.thebaileybrew.flix2.database.MovieRepository;
 import com.thebaileybrew.flix2.interfaces.MoviePreferences;
 import com.thebaileybrew.flix2.interfaces.adapters.MovieAdapter;
 import com.thebaileybrew.flix2.loaders.MovieLoader;
@@ -112,7 +109,7 @@ public class MovieActivity extends AppCompatActivity implements MovieAdapter.Mov
         movieViewModel.getMovies().observe(this, new Observer<List<Movie>>() {
             @Override
             public void onChanged(List<Movie> movies) {
-                mAdapter.setMovieCollection(movies);
+                mAdapter.notifyDataSetChanged();
             }
         });
         //Set the Swipe To Refresh Listener
@@ -123,7 +120,7 @@ public class MovieActivity extends AppCompatActivity implements MovieAdapter.Mov
                     //Load Movies
                     noNetworkLayout.setVisibility(View.INVISIBLE);
                     mRecyclerView.setVisibility(VISIBLE);
-                    Log.e(TAG, "onRefresh: load Prefs 167");
+                    Log.e(TAG, "onRefresh: load Prefs 120");
                     populateUI();
                 } else {
                     //Show no connection layout
@@ -226,6 +223,7 @@ public class MovieActivity extends AppCompatActivity implements MovieAdapter.Mov
     //Initialize the views in the activity
     private void initViews() {
         mRecyclerView = findViewById(R.id.movie_recycler);
+        mAdapter = new MovieAdapter(FlixApplication.getContext(), this);
         noNetworkLayout = findViewById(R.id.no_connection_constraint_layout);
         swipeRefresh = findViewById(R.id.swipe_refresh);
         searchLayout = findViewById(R.id.search_layout);
@@ -250,17 +248,41 @@ public class MovieActivity extends AppCompatActivity implements MovieAdapter.Mov
         filterYear = sharedPrefs.getString(filterYearKey, filterYearDefault);
     }
 
+    private void determineSortingView(String sorting) {
+        Log.e(TAG, "determineSortingView: sorting = " + sorting);
+        switch(sorting){
+            case "popularity.desc":
+                movieViewModel.getPopularMovies().observe(this, new Observer<List<Movie>>() {
+                    @Override
+                    public void onChanged(List<Movie> movies) {
+                        mAdapter.notifyDataSetChanged();
+                    }
+                });
+                break;
+            case "vote_average.desc":
+                movieViewModel.getTopRatedMovies().observe(this, new Observer<List<Movie>>() {
+                    @Override
+                    public void onChanged(List<Movie> movies) {
+                        mAdapter.notifyDataSetChanged();
+                    }
+                });
+                break;
+            case "release_date.desc":
+                break;
+        }
+    }
+
     //Update the UI views based on preferences
     private void populateUI() {
         getSharedPreferences();
         if (sorting.equals(getString(R.string.preference_sort_favorite))) {
             noNetworkLayout.setVisibility(View.INVISIBLE);
             mRecyclerView.setVisibility(VISIBLE);
-            loadFavoritesWatchlist(1);
+            buildPreferencesRecycler(sorting, language, filterYear);
         } else if (sorting.equals(getString(R.string.preference_sort_watchlist))) {
             noNetworkLayout.setVisibility(View.INVISIBLE);
             mRecyclerView.setVisibility(VISIBLE);
-            loadFavoritesWatchlist(2);
+            buildPreferencesRecycler(sorting, language, filterYear);
         } else {
             buildPreferencesRecycler(sorting, language, filterYear);
         }
@@ -268,57 +290,34 @@ public class MovieActivity extends AppCompatActivity implements MovieAdapter.Mov
 
     private void buildPreferencesRecycler(String sorting, String language, String filterYear) {
         List<Movie> movies = new ArrayList<>();
-        MovieLoader movieLoader = new MovieLoader();
-        movieLoader.execute(sorting, language, filterYear, queryResult);
-        try {
-            movies = movieLoader.get();
-        } catch (ExecutionException e) {
-            Log.e(TAG, "buildFavoritesRecycler: execution", e);;
-        } catch (InterruptedException e) {
-            e.printStackTrace();
+        if (sorting.equals("favorite")) {
+            //TODO: Get films that have a DB value of FAVORITE
+
+
+        } else if (sorting.equals("watchlist")) {
+            //TODO: Get films that have a DB value of WATCHLIST
+
+        } else {
+            MovieLoader movieLoader = new MovieLoader();
+            movieLoader.execute(sorting, language, filterYear, queryResult);
+            try {
+                movies = movieLoader.get();
+            } catch (InterruptedException e) {
+                Log.e(TAG, "buildPreferencesRecycler: error interrupted", e);
+                ;
+            } catch (ExecutionException e) {
+                e.printStackTrace();
+            }
         }
-        mAdapter = new MovieAdapter(FlixApplication.getContext(), movies, this);
+
+        mAdapter.setMovieCollection(movies);
+        determineSortingView(sorting);
         mRecyclerView.setLayoutManager(gridLayoutManager);
         mRecyclerView.setHasFixedSize(true);
         mRecyclerView.setAdapter(mAdapter);
         swipeRefresh.setRefreshing(false);
     }
 
-    private void loadFavoritesWatchlist(final int favVal) {
-        List<Movie> movies = new ArrayList<>();
-        class getWatchlist extends AsyncTask<Void, Void, List<Movie>> {
-
-            @Override
-            protected List<Movie> doInBackground(Void... voids) {
-                return DatabaseClient.getInstance(FlixApplication.getContext()).getAppDatabase()
-                        .movieDao().loadFavorites(favVal);
-            }
-
-            @Override
-            protected void onPostExecute(List<Movie> movies) {
-                super.onPostExecute(movies);
-            }
-        }
-        getWatchlist gwl = new getWatchlist();
-
-        try {
-            movies = gwl.execute().get();
-        } catch (ExecutionException e) {
-            Log.e(TAG, "loadWatchList: ", e);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
-        buildRecyclerWithoutPrefs(movies);
-    }
-
-    //Loads the recycler view with data from the database without looking at other shared preferences
-    private void buildRecyclerWithoutPrefs(List<Movie> databaseMovies) {
-        mAdapter = new MovieAdapter(this, databaseMovies, this);
-        mRecyclerView.setLayoutManager(gridLayoutManager);
-        mRecyclerView.setHasFixedSize(true);
-        mRecyclerView.setAdapter(mAdapter);
-        swipeRefresh.setRefreshing(false);
-    }
 
     //Create Menu options
     @Override

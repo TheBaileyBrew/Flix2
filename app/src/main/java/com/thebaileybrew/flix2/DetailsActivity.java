@@ -19,8 +19,6 @@ import android.widget.TextView;
 import com.google.android.material.appbar.AppBarLayout;
 import com.google.android.material.tabs.TabLayout;
 import com.squareup.picasso.Picasso;
-import com.thebaileybrew.flix2.database.DatabaseClient;
-import com.thebaileybrew.flix2.database.MovieRepository;
 import com.thebaileybrew.flix2.database.viewmodels.MainViewModel;
 import com.thebaileybrew.flix2.interfaces.adapters.CollapsingToolbarListener;
 import com.thebaileybrew.flix2.interfaces.adapters.DetailFragmentAdapter;
@@ -30,12 +28,10 @@ import com.thebaileybrew.flix2.models.Movie;
 import com.thebaileybrew.flix2.utils.UrlUtils;
 import com.thebaileybrew.flix2.utils.networkUtils;
 
-import java.util.List;
 import java.util.Locale;
 import java.util.concurrent.ExecutionException;
 
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.lifecycle.Observer;
 import androidx.lifecycle.ViewModelProviders;
 import androidx.viewpager.widget.ViewPager;
 
@@ -94,20 +90,14 @@ public class DetailsActivity extends AppCompatActivity implements View.OnClickLi
         if (getMovieIntent != null) {
             if (getMovieIntent.hasExtra(MOVIE_KEY)) {
                 int movieID = getMovieIntent.getIntExtra(MOVIE_KEY, 0);
-                try {
-                    getMovieDetails(movieID);
-                } catch (ExecutionException ee) {
-                    Log.e(TAG, "onCreate: execution exemption", ee);
-                } catch (InterruptedException ie) {
-                    ie.printStackTrace();
-                }
-                try {
-                    Thread.sleep(100);
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
+
+                //This is where we get the details from the Firebase Database for each individual film
+                //Data passed in will be movieID which is the primary key for all tables in the DB
+                getMovieDetails(movieID);
                 getSupportActionBar().setTitle(movie.getMovieTitle());
                 getSupportActionBar().getThemedContext();
+
+                //This is where I need to set up the ViewModel/LiveData Object to populate the UI
                 populateUI(movie);
                 currentFilmRating = movie.getMovieVoteAverage();
                 //Setup the ViewPager
@@ -145,25 +135,9 @@ public class DetailsActivity extends AppCompatActivity implements View.OnClickLi
         viewPager.getAdapter().notifyDataSetChanged();
 
     }
+    //TODO: Setup get from API and load to Firebase
+    private void getMovieDetails(final int movieID) {
 
-    private void getMovieDetails(final int movieID) throws ExecutionException, InterruptedException {
-        class getMovieSingle extends AsyncTask<Void, Void, Movie> {
-
-            @Override
-            protected Movie doInBackground(Void... voids) {
-                return DatabaseClient.getInstance(FlixApplication.getContext()).getAppDatabase()
-                        .movieDao().loadSingleMovies(movieID);
-            }
-
-            @Override
-            protected void onPostExecute(Movie thismovie) {
-                super.onPostExecute(thismovie);
-                Log.e(TAG, "onPostExecute: movie grabbed = " + movie.getMovieTitle() );
-                movie = thismovie;
-            }
-        }
-        getMovieSingle gms = new getMovieSingle();
-        movie = gms.execute().get();
     }
 
     //Method for declaring the Animation Effects that can happen to objects in any viewstate
